@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Formula Fantasy Quiz</h1>
+    <div className="container-bgimage">
+        <div className="masthead">         
+            <div className="color-overlay d-flex justify-content-center align-items-center">
+                <div className="row">
+                <div className="col-2" >
+                <div className="col-10">
+                    <h1 className="bgih1">
+                    <b> F1 Fantasy....</b>
+                    </h1>
+                </div>
+                <div className="col-2" >
+                <div className="col-2" >
+                <div className="col-2" >
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div className="containter center bgcol2"> 
+        <br />  
+        <form>
+            <h2 className="cl"><b> A - Povinné (+2 body správna odpoveď, -1 bod nesprávna odpoveď)</b></h2>
+            <hr/>
+            <h3>
+                <label>
+                    <b>1. Kto sa stane výťazom velkej ceny ?(1. mesto) </b>
+                </label>
+            </h3>
+            <p style="padding:7px">
+                <select style="width: 40%; text-align: center;">
+                    {data.map((item) => (
+                        <option value={item.value}>{item.name}</option>
+                    ))}
+                </select>
+            </p>
+            <hr />
+            <h3 >
+                <label ><b> 2. Ktorý pilot skončí na 2. mieste ? </b></label>
+            </h3>
+            <p  style="padding:7px">
+                <select style="width: 40%; text-align: center;">
+                    {data.map((item) => (
+                        <option value={item.value}>{item.name}</option>
+                    ))}
+                </select>
+            </p>
+            <hr />
+            <h3 >
+                <label >
+                    <b> 3. Kto z pilotov bude mať narýchlejšie kolo ?</b>
+                </label>
+            </h3>
+            <p style="padding:7px">
+                <select style="width: 40%; text-align: center;">
+                    {data.map((item) => (
+                        <option value={item.value}>{item.name}</option>
+                    ))}    
+                </select>
+            </p>
+            <hr />
+            <h3 >
+                <label>
+                    <b> 4. Kto skončí na posledonom mieste zo všetkých ktorí dokončili veľkú cenu ?</b>
+                </label>
+            </h3>
+            <p style="padding:7px">
+                <select style="width: 40%; text-align: center;">
+                    {data.map((item) => (
+                        <option value={item.value}>{item.name}</option>
+                    ))}    
+                </select>
+            </p>
+            <hr />
+            <h3 >
+                <label>
+                    <b> 5. Kto z pilotov nedokončí závod (DNF) ?</b>
+                </label>
+            </h3>
+            <p style="padding:7px">
+                <select style="width: 40%; text-align: center;">
+                    {data.map((item) => (
+                        <option value={item.value}>{item.name}</option>
+                    ))}    
+                </select>
+            </p>
+            <hr />
+            <h2 className="cl"><b> B - Voliteľné s rizikom straty bodov (+2 body správna odpoveď, -1 bod nesprávna odpoveď)</b></h2>
+            <hr />
+            <h3><b>6. Bude v závode červená vlajka ?</b></h3>
+                <p style="padding:7px">
+                    <select style="width: 40%; text-align: center;">
+                            <option value="ano">Áno</option>
+                            <option value="nie">Nie</option>
+                            <option value="nic"></option>
+                    </select>
+                </p>
+            <hr />
+            <h3><b>7. Bude v závode safety car ?</b></h3>
+                <p style="padding:7px">
+                    <select style="width: 40%; text-align: center;">
+                            <option value="ano">Áno</option>
+                            <option value="nie">Nie</option>
+                            <option value="nic"></option>
+                    </select>
+                </p>       
+            <hr />
+            <h3><b> 8. Bude v závode virtual safety car (VSC) ?</b></h3>
+                <p style="padding:7px">
+                    <select style="width: 40%; text-align: center;">
+                            <option value="ano">Áno</option>
+                            <option value="nie">Nie</option>
+                            <option value="nic"></option>
+                    </select>
+                </p>
+            <hr />
+            <h3><b>9. Bude v závode havária 2 a viacerých jazdcov ?</b></h3>
+                <p style="padding:7px">
+                    <select style="width: 40%; text-align: center;">
+                            <option value="ano">Áno</option>
+                            <option value="nie">Nie</option>
+                            <option value="nic"></option>
+                    </select>
+                </p>
+            <hr />
+            <h3><b> 10. Vyhrá závod ten kto štartoval z pole position (1. miesto) ?</b></h3>
+                <p style="padding:7px">
+                    <select style="width: 40%; text-align: center;">
+                            <option value="ano">Áno</option>
+                            <option value="nie">Nie</option>
+                            <option value="nic"></option>
+                    </select>
+                </p>
+            <hr />
+            <h2 className="cl"><b>C - Voliteľné bez rizika straty bodov (+2 body správna odpoveď, nepovinné)</b></h2>
+            <h3><b> 11. Bude havária na štarte ?</b></h3>
+                <p style="padding:7px">
+                    <select style="width: 40%; text-align: center;" >
+                            <option value="ano">Áno</option>
+                            <option value="nie">Nie</option>
+                            <option value="nic"></option>
+                    </select>
+                </p>
+            <hr />
+            <h3><b> 12. Bude v závode havária 2 a viacerých pilotov ?</b></h3>
+                <p style="padding:7px">
+                    <select style="width: 40%; text-align: center;">
+                            <option value="ano">Áno</option>
+                            <option value="nie">Nie</option>
+                            <option value="nic"></option>
+                    </select>
+                </p>
+            <hr />
+            <h3><b> 13. Vyhrá závod ten, kto štartoval z pole position (1. miesto) ?</b></h3>
+                <p style="padding:7px">
+                    <select style="width: 40%; text-align: center;">
+                            <option value="ano">Áno</option>
+                            <option value="nie">Nie</option>
+                            <option value="nic"></option>
+                    </select>
+                </p>
+            <hr />
+            <h3>
+                <label><b>14. Budú dvaja jazdci rovnakého tímu budú na pódiu (meno tímu)?</b></label>
+            </h3>
+            <p style="padding:7px">
+                <select style="width: 40%; text-align: center;">
+                    <option value="nie">Nie</option>
+                    <option value="red-bull">Red Bull</option>
+                    <option value="ferrari">Ferrari</option>
+                    <option value="mercedes">Mercedes</option>
+                    <option value="alpha-tauri">AlphaTauri</option>
+                    <option value="mclaren">McLaren</option>
+                    <option value="alpine">Alpine</option>
+                    <option value="haas">Haas</option>
+                    <option value="aston-martin">Aston Martin</option>
+                    <option value="williams">Williams</option>
+                    <option value="alfa-romeo">Alfa Romeo</option>
+                </select>
+            </p>
+            <hr />
+            <h3>
+                <label><b>15.Tým s najviac bodmi po posledonom závode (meno tímu)?</b></label>
+            </h3>
+            <p style="padding:7px">
+                <select style="width: 40%; text-align: center;">
+                    <option value="red-bull">Red Bull</option>
+                    <option value="ferrari">Ferrari</option>
+                    <option value="mercedes">Mercedes</option>
+                    <option value="alpha-tauri">AlphaTauri</option>
+                    <option value="mclaren">McLaren</option>
+                    <option value="alpine">Alpine</option>
+                    <option value="haas">Haas</option>
+                    <option value="aston-martin">Aston Martin</option>
+                    <option value="williams">Williams</option>
+                    <option value="alfa-romeo">Alfa Romeo</option>
+                </select>
+            </p>
+            <hr />
+
+            <button className="submit">Submit</button>
+            <p>{q1}</p>
+            <p>{q2}</p>
+            <p>{q14}</p>
+        </form>
+    </div>
+{% endblock %}
