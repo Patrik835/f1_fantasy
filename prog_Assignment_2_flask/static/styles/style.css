@@ -1,9 +1,9 @@
 body {
-    font-family: Arial, sans-serif;
+    background-color: #e4e4e4;
   }
-
 .bgcol1{
-  background-color: gray;
+  background-color: #343a40a2;
+  color: aliceblue;
 }
 .bgcol2{
   background-color: #4a4c4b;
@@ -22,7 +22,7 @@ body {
   font-size: 45px;
   font-family:Arial, Helvetica, sans-serif;
   margin-top: 50px;
-  color: #000000;
+  color: #750d0d;
 }
 .radio{
   font-size: 20px;
@@ -36,7 +36,6 @@ body {
   border-radius:  10px 10px 10px 10px ;
   height: 50px;
   width: 140px;
-  color: white;
   font-weight: bold;
   text-align: center;
   text-transform: uppercase;
@@ -62,6 +61,40 @@ body {
 .submit:active {
   transform: scale(0.95);
 }
+.login{
+  background-color:#343a40;
+  border-radius:  10px 10px 10px 10px ;
+  height: 50px;
+  width: 140px;
+  color: aliceblue;
+  font-weight: bold;
+  text-align: center;
+  text-transform: uppercase;
+  transition: 0.5s;
+  background-size: 200% auto;
+  border-radius: 5px;
+  border: 0px;
+  font-weight: 700;
+  box-shadow: 0px 0px 14px -7px #9f0202;
+  background-image: linear-gradient(45deg, #ba1515 0%, #eb0c0c  51%, #FF512F  100%);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+.login:hover {
+  background-position: right center;
+  /* change the direction of the change here */
+  color: #fff;
+  text-decoration: none;
+}
+.login:active {
+  transform: scale(0.95);
+}
+.login-a{
+  text-decoration: none;
+  color: rgb(254, 150, 150);
+}
 .select{
   width:"40%";
   text-align:"center"
@@ -72,7 +105,15 @@ body {
 .center{
   text-align: center;
 }
-
+.right{
+  text-align: right;
+}
+.login-txt{
+  color:#343a40 ;
+}
+.login-label{
+  font-size: 16px ;
+}
 @media(min-width:0px){
   .bgih1{
     margin-top: 30px;

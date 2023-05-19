@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<br/>
+<h1>Current standings</h1>
+<br/><br/>
+<div class="container">
+    <table class="table table-hover table-bordered table-striped">
+    {% for user in our_users %}
+    <tr>
+        <td>
+            {{user.id}}. {{ user.username }} - {{ user.email }}
+        </td>
+    </tr>
+
+    {% endfor %}
+    </table>
+</div>
+{% endblock%}

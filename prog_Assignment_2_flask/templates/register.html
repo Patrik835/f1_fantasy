@@ -9,16 +9,11 @@
       </div>
 {% endfor %}
 
-
-{% if name %}
-    <h3>Hello {{name}}!!</h3>
-    <h3>You are already logged in.</h3>
-{% else %}
 <div class="container-fluid">
     <div class="row">
         <div class="col-3"></div>
         <div class="col-6">
-            <h2 class="center login-txt"><b> Log In</b></h2>
+            <h2 class="center login-txt"><b> Register</b></h2>
         </div>
     </div>
     <div class="row mt-3">
@@ -36,18 +31,26 @@
                 </div>
                 <div class="row mt-5 mb-3">
                     <div class="col-md-4 right">
+                        {{ form.email.label }}
+                    </div>
+                    <div class="col-md-8 center">
+                        {{ form.email() }}
+                    </div>
+                </div>
+                <div class="row mt-5 mb-3">
+                    <div class="col-md-4 right">
                         {{ form.password.label }}
                     </div>
                     <div class="col-md-8 center">
                         {{ form.password() }}
                     </div>
                 </div>
-                <div class="row mt-3">
-                    <div class="col-md-4"></div>
+                <div class="row mt-5 mb-3">
+                    <div class="col-md-4 right">
+                        {{ form.repeatpassword.label }}
+                    </div>
                     <div class="col-md-8 center">
-                        <p> No account yet? 
-                        <a class="login-a"href="{{url_for('register')}}">Register here!</a>
-                        </p>
+                        {{ form.repeatpassword() }}
                     </div>
                 </div>
                 <div class="row mt-3 mb-3">
@@ -60,6 +63,5 @@
         </div>
     </div>  
 </div>
-
-{% endif %}    
+   
 {% endblock %}

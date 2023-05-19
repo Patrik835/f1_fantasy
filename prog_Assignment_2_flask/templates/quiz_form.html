@@ -2,28 +2,27 @@
 
 {% block content %}
     <h1>Formula Fantasy Quiz</h1>
-    <div className="container-bgimage">
-        <div className="masthead">         
-            <div className="color-overlay d-flex justify-content-center align-items-center">
-                <div className="row">
-                <div className="col-2" >
-                <div className="col-10">
-                    <h1 className="bgih1">
-                    <b> F1 Fantasy....</b>
+    <div class="container-bgimage">
+        <div class="masthead">         
+            <div class="color-overlay d-flex justify-content-center align-items-center">
+                <div class="row">
+                <div class="col-2" >
+                <div class="col-10">
+                    <h1 class="bgih1">
+                    <b> F1 Fantasy</b>
                     </h1>
                 </div>
-                <div className="col-2" >
-                <div className="col-2" >
-                <div className="col-2" >
+                <div class="col-2" >
+                <div class="col-2" >
+                <div class="col-2" >
                 </div>
             </div>
         </div>
     </div>
-    
-    <div className="containter center bgcol2"> 
+    <div class="containter center bgcol2"> 
         <br />  
         <form>
-            <h2 className="cl"><b> A - Povinné (+2 body správna odpoveď, -1 bod nesprávna odpoveď)</b></h2>
+            <h2 class="cl"><b> A - Povinné (+2 body správna odpoveď, -1 bod nesprávna odpoveď)</b></h2>
             <hr/>
             <h3>
                 <label>
@@ -32,9 +31,7 @@
             </h3>
             <p style="padding:7px">
                 <select style="width: 40%; text-align: center;">
-                    {data.map((item) => (
-                        <option value={item.value}>{item.name}</option>
-                    ))}
+                        <option value=></option>
                 </select>
             </p>
             <hr />
@@ -43,9 +40,8 @@
             </h3>
             <p  style="padding:7px">
                 <select style="width: 40%; text-align: center;">
-                    {data.map((item) => (
-                        <option value={item.value}>{item.name}</option>
-                    ))}
+            
+                        <option value=></option>
                 </select>
             </p>
             <hr />
@@ -56,9 +52,7 @@
             </h3>
             <p style="padding:7px">
                 <select style="width: 40%; text-align: center;">
-                    {data.map((item) => (
-                        <option value={item.value}>{item.name}</option>
-                    ))}    
+                    <option value=></option>  
                 </select>
             </p>
             <hr />
@@ -69,9 +63,8 @@
             </h3>
             <p style="padding:7px">
                 <select style="width: 40%; text-align: center;">
-                    {data.map((item) => (
-                        <option value={item.value}>{item.name}</option>
-                    ))}    
+                        <option value=></option>
+      
                 </select>
             </p>
             <hr />
@@ -82,13 +75,11 @@
             </h3>
             <p style="padding:7px">
                 <select style="width: 40%; text-align: center;">
-                    {data.map((item) => (
-                        <option value={item.value}>{item.name}</option>
-                    ))}    
+                        <option value=></option>
                 </select>
             </p>
             <hr />
-            <h2 className="cl"><b> B - Voliteľné s rizikom straty bodov (+2 body správna odpoveď, -1 bod nesprávna odpoveď)</b></h2>
+            <h2 class="cl"><b> B - Voliteľné s rizikom straty bodov (+2 body správna odpoveď, -1 bod nesprávna odpoveď)</b></h2>
             <hr />
             <h3><b>6. Bude v závode červená vlajka ?</b></h3>
                 <p style="padding:7px">
@@ -135,7 +126,7 @@
                     </select>
                 </p>
             <hr />
-            <h2 className="cl"><b>C - Voliteľné bez rizika straty bodov (+2 body správna odpoveď, nepovinné)</b></h2>
+            <h2 class="cl"><b>C - Voliteľné bez rizika straty bodov (+2 body správna odpoveď, nepovinné)</b></h2>
             <h3><b> 11. Bude havária na štarte ?</b></h3>
                 <p style="padding:7px">
                     <select style="width: 40%; text-align: center;" >
@@ -200,11 +191,7 @@
                 </select>
             </p>
             <hr />
-
-            <button className="submit">Submit</button>
-            <p>{q1}</p>
-            <p>{q2}</p>
-            <p>{q14}</p>
+            <button class="submit">Submit</button>
         </form>
     </div>
 {% endblock %}
