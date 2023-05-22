@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 
 {% block content %}
+
+{% for message in get_flashed_messages() %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+{% endfor %}
+
     <h1>Formula Fantasy Quiz</h1>
     <div class="container-bgimage">
         <div class="masthead">         
@@ -21,177 +29,119 @@
     </div>
     <div class="containter center bgcol2"> 
         <br />  
-        <form>
-            <h2 class="cl"><b> A - Povinné (+2 body správna odpoveď, -1 bod nesprávna odpoveď)</b></h2>
+        <form method="POST">
+            <h2 class="cl"><b> A - Required (+2 point right answer, -1 point wrong answer)</b></h2>
             <hr/>
             <h3>
                 <label>
-                    <b>1. Kto sa stane výťazom velkej ceny ?(1. mesto) </b>
+                    <b>{{ form.hidden_tag() }}
+                        {{ form.q1.label }} </b>
                 </label>
             </h3>
-            <p style="padding:7px">
-                <select style="width: 40%; text-align: center;">
-                        <option value=></option>
-                </select>
-            </p>
-            <hr />
-            <h3 >
-                <label ><b> 2. Ktorý pilot skončí na 2. mieste ? </b></label>
-            </h3>
-            <p  style="padding:7px">
-                <select style="width: 40%; text-align: center;">
-            
-                        <option value=></option>
-                </select>
-            </p>
-            <hr />
-            <h3 >
-                <label >
-                    <b> 3. Kto z pilotov bude mať narýchlejšie kolo ?</b>
-                </label>
-            </h3>
-            <p style="padding:7px">
-                <select style="width: 40%; text-align: center;">
-                    <option value=></option>  
-                </select>
-            </p>
-            <hr />
-            <h3 >
-                <label>
-                    <b> 4. Kto skončí na posledonom mieste zo všetkých ktorí dokončili veľkú cenu ?</b>
-                </label>
-            </h3>
-            <p style="padding:7px">
-                <select style="width: 40%; text-align: center;">
-                        <option value=></option>
-      
-                </select>
-            </p>
-            <hr />
-            <h3 >
-                <label>
-                    <b> 5. Kto z pilotov nedokončí závod (DNF) ?</b>
-                </label>
-            </h3>
-            <p style="padding:7px">
-                <select style="width: 40%; text-align: center;">
-                        <option value=></option>
-                </select>
-            </p>
-            <hr />
-            <h2 class="cl"><b> B - Voliteľné s rizikom straty bodov (+2 body správna odpoveď, -1 bod nesprávna odpoveď)</b></h2>
-            <hr />
-            <h3><b>6. Bude v závode červená vlajka ?</b></h3>
-                <p style="padding:7px">
-                    <select style="width: 40%; text-align: center;">
-                            <option value="ano">Áno</option>
-                            <option value="nie">Nie</option>
-                            <option value="nic"></option>
-                    </select>
-                </p>
-            <hr />
-            <h3><b>7. Bude v závode safety car ?</b></h3>
-                <p style="padding:7px">
-                    <select style="width: 40%; text-align: center;">
-                            <option value="ano">Áno</option>
-                            <option value="nie">Nie</option>
-                            <option value="nic"></option>
-                    </select>
-                </p>       
-            <hr />
-            <h3><b> 8. Bude v závode virtual safety car (VSC) ?</b></h3>
-                <p style="padding:7px">
-                    <select style="width: 40%; text-align: center;">
-                            <option value="ano">Áno</option>
-                            <option value="nie">Nie</option>
-                            <option value="nic"></option>
-                    </select>
-                </p>
-            <hr />
-            <h3><b>9. Bude v závode havária 2 a viacerých jazdcov ?</b></h3>
-                <p style="padding:7px">
-                    <select style="width: 40%; text-align: center;">
-                            <option value="ano">Áno</option>
-                            <option value="nie">Nie</option>
-                            <option value="nic"></option>
-                    </select>
-                </p>
-            <hr />
-            <h3><b> 10. Vyhrá závod ten kto štartoval z pole position (1. miesto) ?</b></h3>
-                <p style="padding:7px">
-                    <select style="width: 40%; text-align: center;">
-                            <option value="ano">Áno</option>
-                            <option value="nie">Nie</option>
-                            <option value="nic"></option>
-                    </select>
-                </p>
-            <hr />
-            <h2 class="cl"><b>C - Voliteľné bez rizika straty bodov (+2 body správna odpoveď, nepovinné)</b></h2>
-            <h3><b> 11. Bude havária na štarte ?</b></h3>
-                <p style="padding:7px">
-                    <select style="width: 40%; text-align: center;" >
-                            <option value="ano">Áno</option>
-                            <option value="nie">Nie</option>
-                            <option value="nic"></option>
-                    </select>
-                </p>
-            <hr />
-            <h3><b> 12. Bude v závode havária 2 a viacerých pilotov ?</b></h3>
-                <p style="padding:7px">
-                    <select style="width: 40%; text-align: center;">
-                            <option value="ano">Áno</option>
-                            <option value="nie">Nie</option>
-                            <option value="nic"></option>
-                    </select>
-                </p>
-            <hr />
-            <h3><b> 13. Vyhrá závod ten, kto štartoval z pole position (1. miesto) ?</b></h3>
-                <p style="padding:7px">
-                    <select style="width: 40%; text-align: center;">
-                            <option value="ano">Áno</option>
-                            <option value="nie">Nie</option>
-                            <option value="nic"></option>
-                    </select>
-                </p>
+            <div style="padding:7px">
+                {{form.q1()}}
+            </div>
             <hr />
             <h3>
-                <label><b>14. Budú dvaja jazdci rovnakého tímu budú na pódiu (meno tímu)?</b></label>
+                <label>
+                    <b>
+                        {{ form.q2.label }} </b>
+                </label>
             </h3>
-            <p style="padding:7px">
-                <select style="width: 40%; text-align: center;">
-                    <option value="nie">Nie</option>
-                    <option value="red-bull">Red Bull</option>
-                    <option value="ferrari">Ferrari</option>
-                    <option value="mercedes">Mercedes</option>
-                    <option value="alpha-tauri">AlphaTauri</option>
-                    <option value="mclaren">McLaren</option>
-                    <option value="alpine">Alpine</option>
-                    <option value="haas">Haas</option>
-                    <option value="aston-martin">Aston Martin</option>
-                    <option value="williams">Williams</option>
-                    <option value="alfa-romeo">Alfa Romeo</option>
-                </select>
-            </p>
+            <div style="padding:7px">
+                {{form.q2()}}
+            </div>
             <hr />
             <h3>
-                <label><b>15.Tým s najviac bodmi po posledonom závode (meno tímu)?</b></label>
+                <label>
+                    <b>
+                        {{ form.q3.label }} </b>
+                </label>
             </h3>
-            <p style="padding:7px">
-                <select style="width: 40%; text-align: center;">
-                    <option value="red-bull">Red Bull</option>
-                    <option value="ferrari">Ferrari</option>
-                    <option value="mercedes">Mercedes</option>
-                    <option value="alpha-tauri">AlphaTauri</option>
-                    <option value="mclaren">McLaren</option>
-                    <option value="alpine">Alpine</option>
-                    <option value="haas">Haas</option>
-                    <option value="aston-martin">Aston Martin</option>
-                    <option value="williams">Williams</option>
-                    <option value="alfa-romeo">Alfa Romeo</option>
-                </select>
-            </p>
+            <div style="padding:7px">
+                {{form.q3()}}
+            </div>
             <hr />
-            <button class="submit">Submit</button>
+            <h3>
+                <label>
+                    <b>
+                        {{ form.q4.label }} </b>
+                </label>
+            </h3>
+            <div style="padding:7px">
+                {{form.q4()}}
+            </div>
+            <hr />
+            <h3>
+                <label>
+                    <b>
+                        {{ form.q5.label }} </b>
+                </label>
+            </h3>
+            <div style="padding:7px">
+                {{form.q5()}}
+            </div>
+            <hr />
+            <h3>
+                <label>
+                    <b>
+                        {{ form.q6.label }} </b>
+                </label>
+            </h3>
+            <div style="padding:7px">
+                {{form.q6()}}
+            </div>
+            <hr />
+            <h3>
+                <label>
+                    <b>
+                        {{ form.q7.label }} </b>
+                </label>
+            </h3>
+            <div style="padding:7px">
+                {{form.q7()}}
+            </div>       
+            <hr />
+            <h3>
+                <label>
+                    <b>
+                        {{ form.q8.label }} </b>
+                </label>
+            </h3>
+            <div style="padding:7px">
+                {{form.q8()}}
+            </div>       
+            <hr />
+            <h3>
+                <label>
+                    <b>
+                        {{ form.q9.label }} </b>
+                </label>
+            </h3>
+            <div style="padding:7px">
+                {{form.q9()}}
+            </div>
+            <hr />
+            <h3>
+                <label>
+                    <b>
+                        {{ form.q10.label }} </b>
+                </label>
+            </h3>
+            <div style="padding:7px">
+                {{form.q10()}}
+            </div>
+            <hr>
+            <h3>
+                <label>
+                    <b>
+                        {{ form.q11.label }} </b>
+                </label>
+            </h3>
+            <div style="padding:7px">
+                {{form.q11()}}
+            </div>
+            {{ form.submit(class="login") }}
         </form>
     </div>
 {% endblock %}

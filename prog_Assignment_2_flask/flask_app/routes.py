@@ -1,6 +1,6 @@
 from flask import render_template, flash, redirect, url_for, session
-from flask_app.models import Users
-from flask_app.forms import LoginForm, RegisterForm
+from flask_app.models import Users, QuizAnswers
+from flask_app.forms import LoginForm, RegisterForm, QuizForm
 from flask_app import app, db
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
@@ -81,22 +81,51 @@ def delete(id):
 def dashboard():
     return render_template("dashboard.html")
 
-@app.route("/quiz_form")
+@app.route("/quiz_form", methods=["GET", "POST"])
 @login_required
 def quiz_form():
-    return render_template("quiz_form.html")
+    form = QuizForm()
+    user_quiz = QuizAnswers.query.get(current_user.id)
+    if not user_quiz:
+        user_quiz = QuizAnswers(user_id=current_user.id)  # Create a new QuizAnswers object
+    if form.validate_on_submit():
+        user_quiz.q1 = form.q1.data
+        user_quiz.q2 = form.q2.data
+        user_quiz.q3 = form.q3.data
+        user_quiz.q4 = form.q4.data
+        user_quiz.q5 = form.q5.data
+        user_quiz.q6 = form.q6.data
+        user_quiz.q7 = form.q7.data
+        user_quiz.q8 = form.q8.data
+        user_quiz.q9 = form.q9.data
+        user_quiz.q10 = form.q10.data
+        user_quiz.q11 = form.q11.data
+        db.session.add(user_quiz)
+        db.session.commit()
+        flash("You have successfully completed the quiz")
+        return redirect(url_for('dashboard'))
+    return render_template("quiz_form.html", form = form)
 
 @app.route("/user_standings")
 def user_standings():
     our_users = Users.query.order_by(Users.date_created)
     return render_template("tables.html",our_users = our_users)
+
 @app.route("/rules")
 def rules():
     return render_template("rules.html")
+
 @app.route("/admin")
+@login_required
 def admin():
-    our_users = Users.query.order_by(Users.date_created)
-    return render_template("admin.html",our_users = our_users)
+    id = current_user.id
+    if id ==1:
+        our_users = Users.query.order_by(Users.date_created)
+        return render_template("admin.html",our_users = our_users)
+    else:
+        flash("You do not have access to this page, must be admin")
+        return redirect(url_for('dashboard'))
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template("404.html")
