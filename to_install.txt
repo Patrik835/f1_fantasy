@@ -1,3 +1,5 @@
 pip install flask
 pip install flask-wtf
 pip install flask-sqlalchemy
+pip install Flask-Migrate
+pip install flask_login

@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+<h1>Admin Panel</h1>
+<div class="container">
+    <table class="table table-hover table-bordered table-striped">
+    {% for user in our_users %}
+    <tr>
+        <td>
+            {{user.id}}. {{ user.username }} - {{ user.email }}-{{ user.points }}, PW: {{ user.password_hash }}
+            <a href="{{url_for('delete', id=user.id)}}">Delete</a>
+        </td>
+    </tr>
+
+    {% endfor %}
+    </table>
+</div>
+{% endblock %}
