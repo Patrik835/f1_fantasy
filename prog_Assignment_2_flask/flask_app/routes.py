@@ -64,17 +64,19 @@ def logout():
 @app.route("/delete/<int:id>", methods=["GET", "POST"])
 def delete(id):
     user_to_delete = Users.query.get_or_404(id)
+    user_to_delete_2 = QuizAnswers.query.get_or_404(id)
     username = None
     form = LoginForm()
     try:
         db.session.delete(user_to_delete)
+        db.session.delete(user_to_delete_2)
         db.session.commit()
         flash("User successfully deleted")
         our_users = Users.query.order_by(Users.date_created)
         return render_template("admin.html",form=form, username = username, our_users = our_users)
     except:
         flash("There was a problem deleting that user")
-        return render_template("admin.html",form=form, username = username, our_users = our_users)
+        return render_template("admin.html",form=form, username = username)
 
 @app.route("/dashboard", methods=["GET", "POST"])
 @login_required
