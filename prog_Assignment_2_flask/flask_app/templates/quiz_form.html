@@ -92,6 +92,7 @@
                 {{form.q6()}}
             </div>
             <hr />
+            <h2 class="cl"><b> B - Optional (+2 point right answer,-1 point wrong answer, 0 points no answer)</b></h2>
             <h3>
                 <label>
                     <b>
@@ -122,6 +123,7 @@
                 {{form.q9()}}
             </div>
             <hr />
+            <h2 class="cl"><b> C - Optional (+2 point right answer, 0 points no answer)</b></h2>
             <h3>
                 <label>
                     <b>
@@ -140,6 +142,15 @@
             </h3>
             <div style="padding:7px">
                 {{form.q11()}}
+            </div>
+            <h3>
+                <label>
+                    <b>
+                        {{ form.q12.label }} </b>
+                </label>
+            </h3>
+            <div style="padding:7px">
+                {{form.q12()}}
             </div>
             {{ form.submit(class="login") }}
         </form>

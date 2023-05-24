@@ -34,3 +34,4 @@ class QuizAnswers(db.Model):
     q9 = db.Column(db.String(255), nullable=False)
     q10 = db.Column(db.String(255), nullable=False)
     q11 = db.Column(db.String(255), nullable=False)
+    q12 = db.Column(db.String(255), nullable=False)

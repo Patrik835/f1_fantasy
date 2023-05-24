@@ -1,6 +1,7 @@
 from flask import render_template, flash, redirect, url_for, session
 from flask_app.models import Users, QuizAnswers
 from flask_app.forms import LoginForm, RegisterForm, QuizForm
+from flask_app.scraper import answers_list
 from flask_app import app, db
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
@@ -102,6 +103,7 @@ def quiz_form():
         user_quiz.q9 = form.q9.data
         user_quiz.q10 = form.q10.data
         user_quiz.q11 = form.q11.data
+        user_quiz.q12 = form.q12.data
         db.session.add(user_quiz)
         db.session.commit()
         flash("You have successfully completed the quiz")
@@ -124,6 +126,76 @@ def admin():
     if id ==1:
         our_users = Users.query.order_by(Users.date_created)
         return render_template("admin.html",our_users = our_users)
+    else:
+        flash("You do not have access to this page, must be admin")
+        return redirect(url_for('dashboard'))
+    
+@app.route("/evaluation")
+@login_required
+def evaluation():
+    id = current_user.id
+    if id ==1:       
+        evaluated_answers = answers_list()  
+        answers = QuizAnswers.query.all()
+        for answer in answers:
+            points = 0
+            if answer.q1 == evaluated_answers[0]:
+                points += 2
+            elif answer.q1 != evaluated_answers[0]:
+                points -= 1
+            if answer.q2 == evaluated_answers[1]:
+                points += 2
+            elif answer.q2 != evaluated_answers[1]:
+                points -= 1
+            if answer.q3 == evaluated_answers[2]:
+                points += 2
+            elif answer.q3 != evaluated_answers[2]:
+                points -= 1
+            if answer.q4 == evaluated_answers[3]:
+                points += 2
+            elif answer.q4 != evaluated_answers[3]:
+                points -= 1
+            if answer.q5 in evaluated_answers[4]:
+                points += 2
+            elif len(evaluated_answers[5]) == 0 and answer.q5 == 'nobody':
+                points += 2
+            elif answer.q5 not in evaluated_answers[4]:
+                points -= 1
+            if answer.q6 == evaluated_answers[5]:
+                points += 2
+            elif answer.q6 != evaluated_answers[5]:
+                points -= 1
+            if answer.q7 == evaluated_answers[6]:
+                points += 2
+            elif answer.q7 == 'unanswered':
+                points += 0
+            else:
+                points -= 1
+            if answer.q8 == evaluated_answers[7]:
+                points += 2
+            elif answer.q8 == 'unanswered':
+                points += 0
+            else:
+                points -= 1
+            if answer.q9 == evaluated_answers[8]:
+                points += 2
+            elif answer.q9 == 'unanswered':
+                points += 0
+            else:
+                points -= 1
+            if answer.q10 == evaluated_answers[9]:
+                points += 2
+            if answer.q11 == evaluated_answers[10]:
+                points += 2
+            if answer.q12 == evaluated_answers[11]:
+                points += 2
+            if points < 0:
+                points == 0
+            id = answer.user_id
+            user = Users.query.get_or_404(id)
+            user.points += points
+            db.session.commit()
+        return render_template("admin.html")
     else:
         flash("You do not have access to this page, must be admin")
         return redirect(url_for('dashboard'))

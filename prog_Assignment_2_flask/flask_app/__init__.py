@@ -16,4 +16,4 @@ app.app_context().push()
 migrate = Migrate(app, db)
 
 
-from flask_app import routes
+from flask_app import routes, scraper
