@@ -6,13 +6,15 @@
 <br/><br/>
 <div class="container">
     <table class="table table-hover table-bordered table-striped">
+        <tr><td>Place - Username - Points</td></tr>
     {% for user in our_users %}
-    <tr>
-        <td>
-            {{user.id}}. {{ user.username }} - {{ user.email }}-{{ user.points }}
-        </td>
-    </tr>
-
+        
+        <tr>
+            
+            <td>
+                <b>{{ loop.index }}. - {{ user.username }} - {{ user.points }}</b>
+            </td>
+        </tr>
     {% endfor %}
     </table>
 </div>

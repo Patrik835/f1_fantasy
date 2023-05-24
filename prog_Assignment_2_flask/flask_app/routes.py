@@ -1,11 +1,11 @@
 from flask import render_template, flash, redirect, url_for, session
 from flask_app.models import Users, QuizAnswers
 from flask_app.forms import LoginForm, RegisterForm, QuizForm
-from flask_app.scraper import answers_list
+from flask_app.scraper import answers_list, get_number_of_the_race
 from flask_app import app, db
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-
+from datetime import datetime, timedelta
 
 #flask login manager
 login_manager = LoginManager()
@@ -18,7 +18,9 @@ def load_user(id):
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    next_race, race_nr, race_d = get_number_of_the_race()
+    deadline_date = race_d - timedelta(days=2)
+    return render_template("index.html", next_race = next_race, race_nr = race_nr, race_d = race_d, deadline_date = deadline_date)
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -87,32 +89,39 @@ def dashboard():
 @app.route("/quiz_form", methods=["GET", "POST"])
 @login_required
 def quiz_form():
-    form = QuizForm()
-    user_quiz = QuizAnswers.query.get(current_user.id)
-    if not user_quiz:
-        user_quiz = QuizAnswers(user_id=current_user.id)  # Create a new QuizAnswers object
-    if form.validate_on_submit():
-        user_quiz.q1 = form.q1.data
-        user_quiz.q2 = form.q2.data
-        user_quiz.q3 = form.q3.data
-        user_quiz.q4 = form.q4.data
-        user_quiz.q5 = form.q5.data
-        user_quiz.q6 = form.q6.data
-        user_quiz.q7 = form.q7.data
-        user_quiz.q8 = form.q8.data
-        user_quiz.q9 = form.q9.data
-        user_quiz.q10 = form.q10.data
-        user_quiz.q11 = form.q11.data
-        user_quiz.q12 = form.q12.data
-        db.session.add(user_quiz)
-        db.session.commit()
-        flash("You have successfully completed the quiz")
-        return redirect(url_for('dashboard'))
-    return render_template("quiz_form.html", form = form)
+    next_race, race_nr, race_d = get_number_of_the_race()
+    saturday = race_d - timedelta(days=1)
+    today = datetime.now().date()
+    if today == saturday or today == race_d:
+        flash("Deadline for quiz has passed, try again next week!")
+        return redirect(url_for('index'))
+    else:
+        form = QuizForm()
+        user_quiz = QuizAnswers.query.get(current_user.id)
+        if not user_quiz:
+            user_quiz = QuizAnswers(user_id=current_user.id)  # Create a new QuizAnswers object
+        if form.validate_on_submit():
+            user_quiz.q1 = form.q1.data
+            user_quiz.q2 = form.q2.data
+            user_quiz.q3 = form.q3.data
+            user_quiz.q4 = form.q4.data
+            user_quiz.q5 = form.q5.data
+            user_quiz.q6 = form.q6.data
+            user_quiz.q7 = form.q7.data
+            user_quiz.q8 = form.q8.data
+            user_quiz.q9 = form.q9.data
+            user_quiz.q10 = form.q10.data
+            user_quiz.q11 = form.q11.data
+            user_quiz.q12 = form.q12.data
+            db.session.add(user_quiz)
+            db.session.commit()
+            flash("You have successfully completed the quiz")
+            return redirect(url_for('dashboard'))
+        return render_template("quiz_form.html", form = form)
 
 @app.route("/user_standings")
 def user_standings():
-    our_users = Users.query.order_by(Users.date_created)
+    our_users = Users.query.order_by(Users.points.desc())
     return render_template("tables.html",our_users = our_users)
 
 @app.route("/rules")

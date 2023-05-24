@@ -1,7 +1,6 @@
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 
-# class Fetched_answers:
 
 def get_number_of_the_race():
     race_nr = 0
@@ -10,19 +9,19 @@ def get_number_of_the_race():
     response = requests.get('http://ergast.com/api/f1/current.json')
     data = response.json()
     races = data['MRData']['RaceTable']['Races']
-
     for race in races:
         race_name = race['raceName']
         race_d = race['Qualifying']['date']
         race_date = datetime.strptime(race_d, '%Y-%m-%d').date()
+        race_date += timedelta(days=1)
         qualifying_dates[race_name]=race_date
     for race_name, race_date in qualifying_dates.items():
         race_nr += 1
-        if race_date > current_date:
+        if race_date >= current_date:
             next_race = race_name
             break
-    return next_race, race_nr
-
+    return next_race, race_nr, race_date
+# print(get_number_of_the_race())
 def get_drivers_positions():
     dnf = []
     colided = []

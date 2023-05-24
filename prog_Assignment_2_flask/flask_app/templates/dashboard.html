@@ -8,8 +8,38 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
 {% endfor %}
-<h1>Dashboard</h1>
-<br><br>
-<p>You are logged in!</p>
-<a href="{{url_for('logout')}}">Logout!</a>
+<h2 style="margin-left: 10px;"><b> User Profile</b></h2>
+<br/>
+<div class="card">
+  <div class="card-body">
+      <p class="card-text">
+
+      <div class="container">
+        <div class="row">
+          <div class="col-8">
+
+        <strong>Username:</strong>
+        {{ current_user.username }}<br/>
+
+        <strong>User Id:</strong>
+        {{ current_user.id }}<br/>
+
+        <strong>Email:</strong>
+        {{ current_user.email }}<br/>
+
+        <strong>Date Joined:</strong>
+        {{ current_user.date_created }}<br/>
+        <strong>Points:</strong>
+        {{ current_user.points }}<br/>
+          </p>
+          <a href="{{ url_for('logout')}}" class="btn btn-secondary btn-sm">Logout</a>
+
+          <br/><br/>
+        </div>
+        </div>
+        </div>
+      </div>
+    </div>
+    <br>
+    
 {% endblock %}
