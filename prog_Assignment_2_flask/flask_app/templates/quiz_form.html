@@ -8,30 +8,16 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
 {% endfor %}
-
-    <h1>Formula Fantasy Quiz</h1>
-    <div class="container-bgimage">
-        <div class="masthead">         
-            <div class="color-overlay d-flex justify-content-center align-items-center">
-                <div class="row">
-                <div class="col-2" >
-                <div class="col-10">
-                    <h1 class="bgih1">
-                    <b> F1 Fantasy</b>
-                    </h1>
-                </div>
-                <div class="col-2" >
-                <div class="col-2" >
-                <div class="col-2" >
-                </div>
-            </div>
-        </div>
+    <div class="center">
+    <h1><b> Formula 1 Fantasy Quiz</b></h1>
+    <h3 style="font-weight: 600;">{{race_nr}}. {{next_race}}</h3>
+    <h5>Please fill up the quiz. Good luck!</h5>
     </div>
-    <div class="containter center bgcol2"> 
-        <br />  
+    <div class="containter-fluid center bgcol2"> 
+        <hr class="hr"/>  
         <form method="POST">
             <h2 class="cl"><b> A - Required (+2 point right answer, -1 point wrong answer)</b></h2>
-            <hr/>
+            <hr >
             <h3>
                 <label>
                     <b>{{ form.hidden_tag() }}
@@ -91,8 +77,9 @@
             <div style="padding:7px">
                 {{form.q6()}}
             </div>
-            <hr />
+            <hr class="hr"/>
             <h2 class="cl"><b> B - Optional (+2 point right answer,-1 point wrong answer, 0 points no answer)</b></h2>
+            <hr />
             <h3>
                 <label>
                     <b>
@@ -122,8 +109,9 @@
             <div style="padding:7px">
                 {{form.q9()}}
             </div>
-            <hr />
+            <hr class="hr"/>
             <h2 class="cl"><b> C - Optional (+2 point right answer, 0 points no answer)</b></h2>
+            <hr/>
             <h3>
                 <label>
                     <b>
@@ -152,7 +140,9 @@
             <div style="padding:7px">
                 {{form.q12()}}
             </div>
+            <hr>
             {{ form.submit(class="login") }}
+            <hr class="hr"/>
         </form>
     </div>
 {% endblock %}

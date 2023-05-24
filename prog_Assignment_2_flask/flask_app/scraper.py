@@ -26,7 +26,7 @@ def get_drivers_positions():
     dnf = []
     colided = []
     memory = 0
-    next_race_name, race_number = get_number_of_the_race()
+    next_race_name, race_number,race_date = get_number_of_the_race()
     response = requests.get(f'http://ergast.com/api/f1/2023/{str(race_number-1)}/results.json')
     data = response.json()
     result_table = data['MRData']['RaceTable']['Races'][0]['Results']
@@ -69,7 +69,7 @@ def get_drivers_positions():
 
 
 def get_construct_standings():
-    next_race_name, race_number = get_number_of_the_race()
+    next_race_name, race_number, race_date = get_number_of_the_race()
     response = requests.get(f'https://ergast.com/api/f1/2023/{race_number-1}/constructorStandings.json')
     data = response.json()
     result_table = data['MRData']['StandingsTable']['StandingsLists'][0]["ConstructorStandings"]

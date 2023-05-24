@@ -1,12 +1,16 @@
 body {
     background-color: #e4e4e4;
   }
+.hr{
+  border: 3px solid #000000;
+  height: 1px;
+}
 .bgcol1{
   background-color: #343a40a2;
   color: aliceblue;
 }
 .bgcol2{
-  background-color: #4a4c4b;
+  background-color: #343a40cf;
   color: rgb(215, 220, 207);
 }
 

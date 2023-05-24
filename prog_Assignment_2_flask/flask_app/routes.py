@@ -19,7 +19,7 @@ def load_user(id):
 @app.route("/")
 def index():
     next_race, race_nr, race_d = get_number_of_the_race()
-    deadline_date = race_d - timedelta(days=2)
+    deadline_date = race_d - timedelta(days=1)
     return render_template("index.html", next_race = next_race, race_nr = race_nr, race_d = race_d, deadline_date = deadline_date)
 
 @app.route("/register", methods=["GET", "POST"])
@@ -90,9 +90,8 @@ def dashboard():
 @login_required
 def quiz_form():
     next_race, race_nr, race_d = get_number_of_the_race()
-    saturday = race_d - timedelta(days=1)
     today = datetime.now().date()
-    if today == saturday or today == race_d:
+    if  today == race_d:
         flash("Deadline for quiz has passed, try again next week!")
         return redirect(url_for('index'))
     else:
@@ -117,7 +116,7 @@ def quiz_form():
             db.session.commit()
             flash("You have successfully completed the quiz")
             return redirect(url_for('dashboard'))
-        return render_template("quiz_form.html", form = form)
+        return render_template("quiz_form.html", form = form, next_race = next_race, race_nr=race_nr)
 
 @app.route("/user_standings")
 def user_standings():
