@@ -8,35 +8,58 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
 {% endfor %}
-<h2 style="margin-left: 10px;"><b> User Profile</b></h2>
+<h2 style="margin-left: 10px;" class="center"><b> User Profile</b></h2>
 <br/>
 <div class="card">
   <div class="card-body">
-      <p class="card-text">
-
       <div class="container">
         <div class="row">
-          <div class="col-8">
-
-        <strong>Username:</strong>
-        {{ current_user.username }}<br/>
-
-        <strong>User Id:</strong>
-        {{ current_user.id }}<br/>
-
-        <strong>Email:</strong>
-        {{ current_user.email }}<br/>
-
-        <strong>Date Joined:</strong>
-        {{ current_user.date_created }}<br/>
-        <strong>Points:</strong>
-        {{ current_user.points }}<br/>
-          </p>
-          <a href="{{ url_for('logout')}}" class="btn btn-secondary btn-sm">Logout</a>
-
-          <br/><br/>
-        </div>
-        </div>
+          <div class="col-sm-4" style="font-size: 19px;">
+              <strong>Username:</strong>
+              {{ current_user.username }}<br/>
+              <strong>User Id:</strong>
+              {{ current_user.id }}<br/>
+              <strong>Email:</strong>
+              {{ current_user.email }}<br/>
+              <strong>Date Joined:</strong>
+              {{ current_user.date_created }}<br/>
+              <strong>Points:</strong>
+              {{ current_user.points }}<br/>
+                <a href="{{ url_for('logout')}}" class="btn btn-secondary btn-md mt-2">Logout</a>
+              
+            </div>        
+            <div class="col-sm-1"></div>
+              <div class="col-sm-3" style="font-size: 19px;">
+                <strong>Answer 1:</strong>
+                {{ current_answers.q1 }}<br/>
+                <strong>Answer 2:</strong>
+                {{ current_answers.q2 }}<br/>
+                <strong>Answer 3:</strong>
+                {{ current_answers.q3 }}<br/>
+                <strong>Answer 4:</strong>
+                {{ current_answers.q4 }}<br/>
+                <strong>Answer 5:</strong>
+                {{ current_answers.q5 }}<br/>
+                <strong>Answer 6:</strong>
+                {{ current_answers.q6 }}<br/>
+                <br/><br/>
+              </div>
+              <div class="col-sm-4" style="font-size: 19px;">
+                <strong>Answer 7:</strong>
+                {{ current_answers.q7 }}<br/>
+                <strong>Answer 8:</strong>
+                {{ current_answers.q8 }}<br/>
+                <strong>Answer 9:</strong>
+                {{ current_answers.q9 }}<br/>
+                <strong>Answer 10:</strong>
+                {{ current_answers.q10 }}<br/>
+                <strong>Answer 11:</strong>
+                {{ current_answers.q11 }}<br/>
+                <strong>Answer 12:</strong>
+                {{ current_answers.q12 }}<br/>
+                <a href="{{ url_for('quiz_form')}}" class="btn btn-secondary btn-md mt-2 ">Update</a>
+                <br/><br/>
+            </div>  
         </div>
       </div>
     </div>

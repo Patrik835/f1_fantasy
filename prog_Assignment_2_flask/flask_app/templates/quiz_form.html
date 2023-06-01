@@ -16,6 +16,7 @@
     <div class="containter-fluid center bgcol2"> 
         <hr class="hr"/>  
         <form method="POST">
+            {{ form.csrf_token }}
             <h2 class="cl"><b> A - Required (+2 point right answer, -1 point wrong answer)</b></h2>
             <hr >
             <h3>
@@ -119,7 +120,7 @@
                 </label>
             </h3>
             <div style="padding:7px">
-                {{form.q10()}}
+                {{form.q10(value='red_bull')}}
             </div>
             <hr>
             <h3>
@@ -131,6 +132,7 @@
             <div style="padding:7px">
                 {{form.q11()}}
             </div>
+            <hr>
             <h3>
                 <label>
                     <b>

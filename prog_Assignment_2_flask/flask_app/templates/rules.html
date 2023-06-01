@@ -1,5 +1,32 @@
 {% extends 'base.html' %}
 
 {% block content %}
-
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-3"></div>
+        <div class="col-6">
+            <h2 class="center login-txt"><b> Rules</b></h2>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-md-3 "></div>
+        <div class="col-md-6  bgcol1" >
+            <h4>General Rules</h4>
+            <p>This is a formula Fantasy game where players predict the race results by answering the questions
+            </p>
+            <p>User can submit filled qiuz for the next race from monday after last race till the saturday 23:59
+                before the next race. On the race day is the form locked. </p>
+            <p>It is possible to update the form by filling it again. As many times as you want.</p>
+            <p>Answers are evalated after the race at 23:00</p>
+            <h4>Pointing system</h4>
+            <p class="center">For each question there is a set of possible answers. There are three groups of questions</p>
+            <p><b>A </b>- This group of questions is required, player gets +2 point right answer and -1 point wrong answer </p>
+            <p><b>B </b>- This group of questions is optional, player gets +2 point right answer and -1 point wrong answer </p>
+            <p><b>C </b>- This group of questions is required player gets +2 point right answer and -1 point wrong answer </p>
+            <p>Points are awarded for each correct answer. The user with the most points wins.</p>
+        </div>
+    </div> 
+    <br>
+    <br> 
+</div>
 {% endblock%}

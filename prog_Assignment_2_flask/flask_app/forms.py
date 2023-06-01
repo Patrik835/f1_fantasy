@@ -16,7 +16,7 @@ class RegisterForm(FlaskForm):
     
 class QuizForm(FlaskForm):
     drivers = [('VER','Max Verstappen'),('PER','Sergio Perez'),('HAM','Lewis Hamilton'),
-               ('RUS','George Russel'),('NOR','Lando Norris'),('PIA','Oskar Piastry'),
+               ('RUS','George Russel'),('NOR','Lando Norris'),('PIA','Oscar Piastri'),
                ('LEC','Charles Leclerc'),('SAI','Carlos Sainz'),('GAS','Pierre Gasly'),
                ('OCO','Esteban Ocon'),('ALO','Fernando Alonso'),('STR','Lance Stroll'),
                ('MAG','Kevin Magnussen'),('HUL','Nico Hulkenberg'),('BOT','Valtteri Bottas'),

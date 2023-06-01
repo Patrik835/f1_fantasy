@@ -15,47 +15,56 @@ login_manager.login_view = 'login'
 def load_user(id):
     return Users.query.get(int(id))
 
-
+#index page
 @app.route("/")
 def index():
+    #getting needed values from the function
     next_race, race_nr, race_d = get_number_of_the_race()
     deadline_date = race_d - timedelta(days=1)
+    #rendering the page with values
     return render_template("index.html", next_race = next_race, race_nr = race_nr, race_d = race_d, deadline_date = deadline_date)
-
+#register page
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    #get the form
     form = RegisterForm()
     #validate form
-    if form.validate_on_submit():           
-        user = Users.query.filter_by(username=form.username.data, email=form.email.data, password = form.password.data).first()  # check if user exists
-        if user is None:                                                                          # if not, create new user
+    if form.validate_on_submit():
+        #get users from db table to check if user exists
+        user = Users.query.filter_by(username=form.username.data, email=form.email.data, password = form.password.data).first()  
+        #if does not exist, create new user
+        if user is None:
             #hash the password
             hash_pw = generate_password_hash(form.password.data, 'SHA256')
-            user = Users(username = form.username.data, email = form.email.data, password_hash = hash_pw)  # create new user
-            db.session.add(user)                # add new user to database
-            db.session.commit()                 # commit changes to database
+            # create new user
+            user = Users(username = form.username.data, email = form.email.data, password_hash = hash_pw)
+            db.session.add(user)             # add new user to database
+            db.session.commit()              # commit changes to database
             flash("You have successfully registered")
             return redirect(url_for('dashboard'))
         else:
             flash("Username or email already exists")
     return render_template("register.html", form = form)
-
+#log in page
 @app.route("/login", methods=["GET", "POST"])
 def login():
     form = LoginForm()
     #validate form
     if form.validate_on_submit():
-        user = Users.query.filter_by(username=form.username.data).first()  # check if user exists
-        if user and check_password_hash(user.password_hash, form.password.data):   #check if password is correct
+        # check if user exists
+        user = Users.query.filter_by(username=form.username.data).first()
+        #check if password is correct
+        if user and check_password_hash(user.password_hash, form.password.data):
             login_user(user)                  # log in the user
             flash("You have successfully logged in")
             session['logged_in'] = True
             return redirect(url_for('dashboard'))
+        #if pasword or username is incorrect
         else:
                 session['logged_in'] = False
                 flash(f"Password or username is incorrect - Try again")
     return render_template("login.html", form = form)
-
+#log out page
 @app.route("/logout", methods=["GET", "POST"])
 @login_required
 def logout():
@@ -67,12 +76,16 @@ def logout():
 @app.route("/delete/<int:id>", methods=["GET", "POST"])
 def delete(id):
     user_to_delete = Users.query.get_or_404(id)
-    user_to_delete_2 = QuizAnswers.query.get_or_404(id)
+    try:
+        user_to_delete_2 = QuizAnswers.query.get_or_404(id)
+    except:
+        user_to_delete_2 = None
     username = None
     form = LoginForm()
     try:
         db.session.delete(user_to_delete)
-        db.session.delete(user_to_delete_2)
+        if user_to_delete_2 != None:
+            db.session.delete(user_to_delete_2)
         db.session.commit()
         flash("User successfully deleted")
         our_users = Users.query.order_by(Users.date_created)
@@ -84,7 +97,8 @@ def delete(id):
 @app.route("/dashboard", methods=["GET", "POST"])
 @login_required
 def dashboard():
-    return render_template("dashboard.html")
+    current_answers = QuizAnswers.query.get(current_user.id)
+    return render_template("dashboard.html" , current_answers = current_answers)
 
 @app.route("/quiz_form", methods=["GET", "POST"])
 @login_required
@@ -97,9 +111,26 @@ def quiz_form():
     else:
         form = QuizForm()
         user_quiz = QuizAnswers.query.get(current_user.id)
+        if user_quiz:
+            form.q1.default = user_quiz.q1
+            form.q2.default = user_quiz.q2
+            form.q3.default = user_quiz.q3
+            form.q4.default = user_quiz.q4
+            form.q5.default = user_quiz.q5
+            form.q6.default = user_quiz.q6
+            form.q7.default = user_quiz.q7
+            form.q8.default = user_quiz.q8
+            form.q9.default = user_quiz.q9
+            form.q10.default = user_quiz.q10
+            form.q11.default = user_quiz.q11
+            form.q12.default = user_quiz.q12
+            form.process()
+        else:
+            pass
         if not user_quiz:
             user_quiz = QuizAnswers(user_id=current_user.id)  # Create a new QuizAnswers object
         if form.validate_on_submit():
+            form = QuizForm()
             user_quiz.q1 = form.q1.data
             user_quiz.q2 = form.q2.data
             user_quiz.q3 = form.q3.data
@@ -119,6 +150,7 @@ def quiz_form():
         return render_template("quiz_form.html", form = form, next_race = next_race, race_nr=race_nr)
 
 @app.route("/user_standings")
+@login_required
 def user_standings():
     our_users = Users.query.order_by(Users.points.desc())
     return render_template("tables.html",our_users = our_users)
