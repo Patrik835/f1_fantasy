@@ -1,6 +1,12 @@
 {% extends 'base.html' %}
 
 {% block content %}
+{% for message in get_flashed_messages() %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+{% endfor %}
 <h1 class="center">Admin Panel</h1>
 <div class="container">
     <table class="table table-hover table-bordered table-striped">
@@ -8,11 +14,15 @@
     <tr>
         <td>
             {{user.id}}. {{ user.username }} - {{ user.email }}-{{ user.points }}, PW: {{ user.password_hash }}
-            <a href="{{url_for('delete', id=user.id)}}">Delete</a>
+            <a href="{{url_for('delete', id=user.id)}}">Delete User</a>
         </td>
     </tr>
     {% endfor %}
     </table>
-    <p><a href="{{url_for('evaluation')}}">Evaluate All</a></p>
+    <button><a href="{{url_for('evaluation')}}">Evaluate All</a></button>
+    <br>
+  
+    <p style="float:right;"><a href="{{url_for('delete_all_inputs')}}">Delete All</a></p>
+    <br>
 </div>
 {% endblock %}

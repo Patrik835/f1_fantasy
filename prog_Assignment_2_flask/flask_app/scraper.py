@@ -24,7 +24,7 @@ def get_number_of_the_race():
         return next_race, race_nr, race_date
     except:
         None, None, None
-# print(get_number_of_the_race())
+
 def get_drivers_positions():
     dnf = []
     colided = []
@@ -71,8 +71,6 @@ def get_drivers_positions():
         return p_1, p_2, p_3, dnf, p_last, fastest_lap, fastest_lap_lap, collision, pol_p1, norris_points
     except:
         return  None, None, None, None, None, None, None, None, None, None
-# print(get_drivers_positions())
-
 
 def get_construct_standings():
     try:    
@@ -86,9 +84,7 @@ def get_construct_standings():
         return c_1
     except:
         return None
-# print(get_construct_standings())
     
-
 def answers_list():
     try:
         answers_list = [0,0,0,0,0,0,0,0,0,0,0,0] 
@@ -116,4 +112,3 @@ def answers_list():
         return answers_list
     except:
         return None
-# print(answers_list())

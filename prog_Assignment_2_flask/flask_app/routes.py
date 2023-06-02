@@ -73,26 +73,48 @@ def logout():
     flash("You have successfully logged out")
     return redirect(url_for('login'))
 
+@app.route("/delete_all_inputs", methods=["GET", "POST"])
+@login_required
+def delete_all_inputs():
+    id = current_user.id
+    if id == 1: 
+        try:
+            db.session.query(QuizAnswers).delete()
+            db.session.commit()
+            flash("All inputs deleted successfully")
+            return redirect(url_for('admin'))
+        except Exception as e:
+            flash(f"error{e}")
+            return redirect(url_for('admin'))
+    else:
+        flash("You do not have access to this page, must be admin")
+        return redirect(url_for('dashboard'))
+    
 @app.route("/delete/<int:id>", methods=["GET", "POST"])
 def delete(id):
-    user_to_delete = Users.query.get_or_404(id)
-    try:
-        user_to_delete_2 = QuizAnswers.query.get_or_404(id)
-    except:
-        user_to_delete_2 = None
-    username = None
-    form = LoginForm()
-    try:
-        db.session.delete(user_to_delete)
-        if user_to_delete_2 != None:
-            db.session.delete(user_to_delete_2)
-        db.session.commit()
-        flash("User successfully deleted")
-        our_users = Users.query.order_by(Users.date_created)
-        return render_template("admin.html",form=form, username = username, our_users = our_users)
-    except:
-        flash("There was a problem deleting that user")
-        return render_template("admin.html",form=form, username = username)
+    id = current_user.id
+    if id == 1: 
+        user_to_delete = Users.query.get_or_404(id)
+        try:
+            user_to_delete_2 = QuizAnswers.query.get_or_404(id)
+        except:
+            user_to_delete_2 = None
+        username = None
+        form = LoginForm()
+        try:
+            db.session.delete(user_to_delete)
+            if user_to_delete_2 != None:
+                db.session.delete(user_to_delete_2)
+            db.session.commit()
+            flash("User successfully deleted")
+            our_users = Users.query.order_by(Users.date_created)
+            return render_template("admin.html",form=form, username = username, our_users = our_users)
+        except:
+            flash("There was a problem deleting that user")
+            return render_template("admin.html",form=form, username = username)
+    else:
+        flash("You do not have access to this page, must be admin")
+        return redirect(url_for('dashboard'))
 
 @app.route("/dashboard", methods=["GET", "POST"])
 @login_required
@@ -174,7 +196,7 @@ def admin():
 @login_required
 def evaluation():
     id = current_user.id
-    if id ==1:       
+    if id == 1:       
         evaluated_answers = answers_list()  
         answers = QuizAnswers.query.all()
         for answer in answers:
