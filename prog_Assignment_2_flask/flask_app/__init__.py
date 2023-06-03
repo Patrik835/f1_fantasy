@@ -7,8 +7,8 @@ from flask_wtf.csrf import CSRFProtect
 app = Flask(__name__)
 #add database
 #sqlite db
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://sjyvtcwsyfbzri:264435dd3efa106759f3c23dc3f332fc608b9b89483bd2a57cbd7023a42a9a3d@ec2-34-202-127-5.compute-1.amazonaws.com:5432/dahqcu812ug0gr'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://luskdaihpcphpe:810b682365bcacc2ad7cf06fc6b5c1a5ec23554e06856c1cb697c75451921655@ec2-34-197-91-131.compute-1.amazonaws.com:5432/d3v3eph8tuc1hr'
 
 
 #secret key for forms
