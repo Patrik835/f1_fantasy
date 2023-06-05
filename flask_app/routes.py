@@ -3,10 +3,13 @@ from flask_app.models import Users, QuizAnswers
 from flask_app.forms import LoginForm, RegisterForm, QuizForm
 from flask_app.scraper import answers_list, get_number_of_the_race
 from flask_app import app, db
+from flask_wtf.csrf import CSRFProtect
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from datetime import datetime, timedelta
 
+
+csrf = CSRFProtect(app)
 #flask login manager
 login_manager = LoginManager()
 login_manager.init_app(app)
