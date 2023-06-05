@@ -61,11 +61,12 @@ def login():
         # check if user exists
         user = Users.query.filter_by(username=form.username.data).first()
         #check if password is correct
-        if user and check_password_hash(user.password_hash, form.password.data):
-            login_user(user)                  # log in the user
-            flash("You have successfully logged in")
-            session['logged_in'] = True
-            return redirect(url_for('dashboard'))
+        if user:
+            if check_password_hash(user.password_hash, form.password.data):
+                login_user(user)                  # log in the user
+                flash("You have successfully logged in")
+                session['logged_in'] = True
+                return redirect(url_for('dashboard'))
         #if pasword or username is incorrect
         else:
                 session['logged_in'] = False
