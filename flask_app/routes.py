@@ -29,21 +29,23 @@ def register():
     #get the form
     form = RegisterForm()
     #validate form
-    if form.validate_on_submit():
-        #get users from db table to check if user exists
-        user = Users.query.filter_by(username=form.username.data, email=form.email.data, password = form.password.data).first()  
-        #if does not exist, create new user
-        if user is None:
-            #hash the password
-            hash_pw = generate_password_hash(form.password.data, 'SHA256')
-            # create new user
-            user = Users(username = form.username.data, email = form.email.data, password_hash = hash_pw)
-            db.session.add(user)             # add new user to database
-            db.session.commit()              # commit changes to database
-            flash("You have successfully registered")
-            return redirect(url_for('dashboard'))
-        else:
+    try:
+        if form.validate_on_submit():
+            #get users from db table to check if user exists
+            user = Users.query.filter_by(username=form.username.data, email=form.email.data, password = form.password.data).first()  
+            #if does not exist, create new user
+            if user is None:
+                #hash the password
+                hash_pw = generate_password_hash(form.password.data, 'SHA256')
+                # create new user
+                user = Users(username = form.username.data, email = form.email.data, password_hash = hash_pw)
+                db.session.add(user)             # add new user to database
+                db.session.commit()              # commit changes to database
+                flash("You have successfully registered")
+                return redirect(url_for('dashboard'))
+    except:
             flash("Username or email already exists")
+            return redirect(url_for('register'))
     return render_template("register.html", form = form)
 #log in page
 @app.route("/login", methods=["GET", "POST"])
@@ -77,7 +79,7 @@ def logout():
 @login_required
 def delete_all_inputs():
     id = current_user.id
-    if id == 1: 
+    if id == 9: 
         try:
             db.session.query(QuizAnswers).delete()
             db.session.commit()
@@ -92,8 +94,8 @@ def delete_all_inputs():
     
 @app.route("/delete/<int:id>", methods=["GET", "POST"])
 def delete(id):
-    id = current_user.id
-    if id == 1: 
+    ide = current_user.id
+    if ide == 9: 
         user_to_delete = Users.query.get_or_404(id)
         try:
             user_to_delete_2 = QuizAnswers.query.get_or_404(id)
@@ -185,7 +187,7 @@ def rules():
 @login_required
 def admin():
     id = current_user.id
-    if id ==1:
+    if id ==9:
         our_users = Users.query.order_by(Users.date_created)
         return render_template("admin.html",our_users = our_users)
     else:
@@ -196,7 +198,7 @@ def admin():
 @login_required
 def evaluation():
     id = current_user.id
-    if id == 1:       
+    if id == 9:       
         evaluated_answers = answers_list()  
         answers = QuizAnswers.query.all()
         for answer in answers:

@@ -16,6 +16,7 @@
     <div class="containter-fluid center bgcol2"> 
         <hr class="hr"/>  
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             {{ form.csrf_token }}
             <h2 class="cl"><b> A - Required (+2 point right answer, -1 point wrong answer)</b></h2>
             <hr >
