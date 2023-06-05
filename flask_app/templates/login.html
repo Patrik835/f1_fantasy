@@ -21,6 +21,7 @@
         <div class="col-md-6  bgcol1" >
             <form method="POST">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {{ form.csrf_token }}
                 <div class="row mt-5 mb-3">
                     <div class="col-md-4 right">
                         {{ form.hidden_tag() }}
