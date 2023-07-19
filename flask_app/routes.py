@@ -1,5 +1,5 @@
 from flask import render_template, flash, redirect, url_for, session
-from flask_app.models import Users, QuizAnswers
+from flask_app.models import Users, QuizAnswers, QuizAnswersHistory
 from flask_app.forms import LoginForm, RegisterForm, QuizForm
 from flask_app.scraper import answers_list, get_number_of_the_race
 from flask_app import app, db
@@ -18,11 +18,24 @@ login_manager.login_view = 'login'
 def load_user(id):
     return Users.query.get(int(id))
 
+def create_last_weeks_answer_summ(user_id, race_nr, previous_race):
+    user_quiz = QuizAnswers.query.get(user_id)
+    if user_quiz is None:
+        pass
+    else:
+        quiz_answers_history = QuizAnswersHistory(
+            user_id = user_id, previous_race = previous_race ,race_nr = race_nr, q1 = user_quiz.q1, q2 = user_quiz.q2,
+            q3 = user_quiz.q3, q4 = user_quiz.q4, q5 = user_quiz.q5, q6 = user_quiz.q6,
+            q7 = user_quiz.q7, q8 = user_quiz.q8, q9 = user_quiz.q9, q10 = user_quiz.q10,
+            q11 = user_quiz.q11, q12 = user_quiz.q12, points_for_race = points)
+        db.session.add(quiz_answers_history)
+        db.session.commit()
+
 #index page
 @app.route("/")
 def index():
     #getting needed values from the function
-    next_race, race_nr, race_d = get_number_of_the_race()
+    next_race, race_nr, race_d, previous_race = get_number_of_the_race()
     deadline_date = race_d - timedelta(days=1)
     #rendering the page with values
     return render_template("index.html", next_race = next_race, race_nr = race_nr, race_d = race_d, deadline_date = deadline_date)
@@ -83,10 +96,16 @@ def logout():
 
 @app.route("/delete_all_inputs", methods=["GET", "POST"])
 @login_required
-def delete_all_inputs():
+def delete_all_inputs_and_add_to_history():
     id = current_user.id
     if id == 9: 
         try:
+            users = Users.query.all()
+            user_ids = [user.id for user in users]
+            race_name, race_nr, race_date, previous_race = get_number_of_the_race()
+            race_nr -= 1
+            for id in user_ids:
+                create_last_weeks_answer_summ(id, race_nr, previous_race)
             db.session.query(QuizAnswers).delete()
             db.session.commit()
             flash("All inputs deleted successfully")
@@ -130,10 +149,17 @@ def dashboard():
     current_answers = QuizAnswers.query.get(current_user.id)
     return render_template("dashboard.html" , current_answers = current_answers)
 
+@app.route("/history_answers", methods=["GET", "POST"])
+@login_required
+def history_answers():
+    #make query to show all the users rows in the quiz answers history table
+    current_answers = QuizAnswersHistory.query.filter_by(user_id=current_user.id).all()
+    return render_template("users_history.html" , current_answers = current_answers)
+
 @app.route("/quiz_form", methods=["GET", "POST"])
 @login_required
 def quiz_form():
-    next_race, race_nr, race_d = get_number_of_the_race()
+    next_race, race_nr, race_d, previous_race = get_number_of_the_race()
     today = datetime.now().date()
     if  today == race_d:
         flash("Deadline for quiz has passed, try again next week!")
@@ -187,6 +213,7 @@ def user_standings():
 
 @app.route("/rules")
 def rules():
+
     return render_template("rules.html")
 
 @app.route("/admin")
@@ -203,6 +230,7 @@ def admin():
 @app.route("/evaluation")
 @login_required
 def evaluation():
+    global points
     id = current_user.id
     if id == 9:       
         evaluated_answers = answers_list()  
@@ -262,13 +290,25 @@ def evaluation():
             if points < 0:
                 points == 0
             id = answer.user_id
-            user = Users.query.get_or_404(id)
+            user = Users.query.get_or_404(id)         
             user.points += points
             db.session.commit()
         return render_template("admin.html")
     else:
         flash("You do not have access to this page, must be admin")
         return redirect(url_for('dashboard'))
+    
+@app.route("/quiz_answers_history")
+@login_required
+def quiz_answers_history():
+    id = current_user.id
+    if id == 9: 
+        users = Users.query.all()
+        user_ids = [user.id for user in users]
+        race_name, race_nr, race_date, previous_race = get_number_of_the_race()
+        for id in user_ids:
+            create_last_weeks_answer_summ(id, race_nr)
+
 
 @app.errorhandler(404)
 def page_not_found(e):

@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 def get_number_of_the_race():
     race_nr = 0
     qualifying_dates = {}
+    prev_races = []
     try:
         current_date = datetime.now().date()
         response = requests.get('http://ergast.com/api/f1/current.json')
@@ -15,22 +16,26 @@ def get_number_of_the_race():
             race_d = race['Qualifying']['date']
             race_date = datetime.strptime(race_d, '%Y-%m-%d').date()
             race_date += timedelta(days=1)
-            qualifying_dates[race_name]=race_date
+            qualifying_dates[race_name] = race_date
         for race_name, race_date in qualifying_dates.items():
             race_nr += 1
+            if race_date >= current_date - timedelta(days=8):
+                prev_races.append(race_name)
             if race_date >= current_date:
                 next_race = race_name
                 break
-        return next_race, race_nr, race_date
+        previous_race = prev_races[0]
+        return next_race, race_nr, race_date, previous_race
     except:
         None, None, None
+
 
 def get_drivers_positions():
     dnf = []
     colided = []
     memory = 0
     try:    
-        next_race_name, race_number,race_date = get_number_of_the_race()
+        next_race_name, race_number,race_date, previous_race = get_number_of_the_race()
         response = requests.get(f'http://ergast.com/api/f1/2023/{str(race_number-1)}/results.json')
         data = response.json()
         result_table = data['MRData']['RaceTable']['Races'][0]['Results']
@@ -74,7 +79,7 @@ def get_drivers_positions():
 
 def get_construct_standings():
     try:    
-        next_race_name, race_number, race_date = get_number_of_the_race()
+        next_race_name, race_number, race_date, previous_race = get_number_of_the_race()
         response = requests.get(f'https://ergast.com/api/f1/2023/{race_number-1}/constructorStandings.json',verify=False)
         data = response.json()
         result_table = data['MRData']['StandingsTable']['StandingsLists'][0]["ConstructorStandings"]

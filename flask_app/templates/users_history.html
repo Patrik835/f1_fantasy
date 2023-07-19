@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1 class="center">History</h1>
+<div class="container">
+    <table class="table table-hover table-bordered table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Race Name</th>
+                <th scope="col">Race Nr.</th>
+                <th scope="col">q1</th>
+                <th scope="col">q2</th>
+                <th scope="col">q3</th>
+                <th scope="col">q4</th>
+                <th scope="col">q5</th>
+                <th scope="col">q6</th>
+                <th scope="col">q7</th>
+                <th scope="col">q8</th>
+                <th scope="col">q9</th>
+                <th scope="col">q10</th>
+                <th scope="col">q11</th>
+                <th scope="col">q12</th>
+                <th scope="col">Points</th>
+            </tr>
+        </thead>
+        {% for row in current_answers %}
+            <tr>
+                <th scope="row">
+                    <b>{{ row.previous_race }}</b>
+                </th>
+                <th scope="row">
+                    <b>{{ row.race_nr}}</b>
+                </th>
+                <td>
+                    {{ row.q1 }}
+                </td>
+                <td>
+                    {{ row.q2 }}
+                </td>
+                <td>
+                    {{ row.q3 }}
+                </td>
+                <td>
+                    {{ row.q4 }}
+                </td>
+                <td>
+                    {{ row.q5 }}
+                </td>
+                <td>
+                    {{ row.q6 }}
+                </td>
+                <td>
+                    {{ row.q7 }}
+                </td>
+                <td>
+                    {{ row.q8 }}
+                </td>
+                <td>
+                    {{ row.q9 }}
+                </td>
+                <td>
+                    {{ row.q10 }}
+                </td>
+                <td>
+                    {{ row.q11 }}
+                </td>
+                <td>
+                    {{ row.q12 }}
+                </td>
+                <td>
+                    {{ row.points_for_race }}
+                </td>    
+            </tr>      
+        {% endfor %}
+    </table>
+</div>
+
+{% endblock %}

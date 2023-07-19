@@ -15,6 +15,9 @@
           <li class="nav-item">
             <a class="nav-link" href="{{url_for('user_standings')}}">Standings</a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{url_for('history_answers')}}">History</a>
+          </li>
           {% if current_user.id == 9 %}
           <li class="nav-item">
             <a class="nav-link" href="{{url_for('admin')}}">Admin</a>
