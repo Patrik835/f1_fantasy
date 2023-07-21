@@ -41,7 +41,6 @@ def index():
     return render_template("index.html", next_race = next_race, race_nr = race_nr, race_d = race_d, deadline_date = deadline_date)
 #register page
 @app.route("/register", methods=["GET", "POST"])
-@csrf.exempt
 def register():
     #get the form
     form = RegisterForm()
@@ -66,7 +65,6 @@ def register():
     return render_template("register.html", form = form)
 #log in page
 @app.route("/login", methods=["GET", "POST"])
-@csrf.exempt
 def login():
     form = LoginForm()
     #validate form
