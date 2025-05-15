@@ -1,3 +1,102 @@
+# F1 Fantasy League
+
+A web application for F1 Fantasy League predictions and scoring.
+
+## Features
+
+- User registration and authentication
+- Race predictions for upcoming F1 races
+- Automatic race evaluation using the OpenF1 API
+- Points calculation and standings
+- Admin dashboard for race management
+
+## Prerequisites
+
+- Python 3.8 or higher
+- pip (Python package manager)
+- Git
+
+## Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/f1_fantasy.git
+cd f1_fantasy
+```
+
+2. Create and activate a virtual environment:
+```bash
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+```
+
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+4. Set up environment variables:
+```bash
+cp .env.example .env
+```
+Edit `.env` and set your configuration values.
+
+5. Initialize the database:
+```bash
+flask db upgrade
+```
+
+## Running the Application
+
+### Development
+```bash
+flask run
+```
+
+### Production
+```bash
+gunicorn -w 4 -b 0.0.0.0:8000 "flask_app:create_app()"
+```
+
+## Project Structure
+
+```
+f1_fantasy/
+├── flask_app/
+│   ├── __init__.py
+│   ├── models.py
+│   ├── routes.py
+│   ├── forms.py
+│   ├── api_service.py
+│   └── templates/
+├── migrations/
+├── instance/
+├── .env.example
+├── config.py
+├── requirements.txt
+└── README.md
+```
+
+## API Integration
+
+The application uses the OpenF1 API (via jolpi.ca proxy) to fetch:
+- Race schedules
+- Driver information
+- Team standings
+- Race results
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
 # F1 Fantasy Fullstack Project
 #### Formula one fantasy game with evaluation from api.
 Created with Python flask app with SQLite db getting information from https://documenter.getpostman.com/view/11586746/SztEa7bL#intro api.

@@ -1,29 +1,154 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
 
 {% block content %}
-{% for message in get_flashed_messages() %}
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
-{% endfor %}
-<h1 class="center">Admin Panel</h1>
-<div class="container">
-    <table class="table table-hover table-bordered table-striped">
-    {% for user in our_users %}
-    <tr>
-        <td>
-            {{user.id}}. {{ user.username }} - {{ user.email }}-{{ user.points }}, PW: {{ user.password_hash }}
-            <a href="{{url_for('delete', id=user.id)}}">Delete User</a>
-        </td>
-    </tr>
-    {% endfor %}
-    </table>
-    <button><a href="{{url_for('evaluation')}}">Evaluate All</a></button>
-    <br>
-  
-    <p style="float:right;"><a href="{{url_for('delete_all_inputs_and_add_to_history')}}">Delete All and Add to history</a></p>
-    <p>use with caution, ONLY AFTER THE RACE IS EVALUATED</p>
-    <br>
+<div class="container py-5">
+    <div class="row">
+        <!-- Admin Stats -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">Admin Stats</h3>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Total Users:</span>
+                        <span class="h4 mb-0">{{ users|length }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Total Races:</span>
+                        <span class="h4 mb-0">{{ races|length }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Total Predictions:</span>
+                        <span class="h4 mb-0">{{ predictions|length }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Management -->
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="card-title mb-0">User Management</h3>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                            <i class="fas fa-plus"></i> Add User
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Points</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td>{{ user.role.name }}</td>
+                                    <td>{{ user.points }}</td>
+                                    <td>
+                                        <a href="{{ url_for('edit_user', user_id=user.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Race Management -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">Race Management</h3>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Race Name</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Predictions</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for race in races %}
+                                <tr>
+                                    <td>{{ race.race_name }}</td>
+                                    <td>{{ race.race_date.strftime('%B %d, %Y') }}</td>
+                                    <td>
+                                        {% if race.is_completed %}
+                                        <span class="badge bg-success">Completed</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">Upcoming</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ race.predictions|length }}</td>
+                                    <td>
+                                        {% if not race.is_completed %}
+                                        <a href="{{ url_for('evaluate_predictions', race_id=race.id) }}" class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-check"></i> Evaluate
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addUserModalLabel">Add New User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin') }}">
+                <div class="modal-body">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.username.label(class="form-label") }}
+                        {{ form.username(class="form-control") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.email.label(class="form-label") }}
+                        {{ form.email(class="form-control") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.role.label(class="form-label") }}
+                        {{ form.role(class="form-select") }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Add User</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}

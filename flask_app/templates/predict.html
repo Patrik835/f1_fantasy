@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Make Predictions - {{ race.race_name }}{% endblock %}
+
+{% block content %}
+<style>
+    .card {
+        transition: none !important;
+        transform: none !important;
+    }
+    .card:hover {
+        transform: none !important;
+        box-shadow: none !important;
+    }
+    .form-select {
+        transition: none !important;
+    }
+    .form-select:hover {
+        transform: none !important;
+    }
+    .btn {
+        transition: none !important;
+    }
+    .btn:hover {
+        transform: none !important;
+    }
+</style>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card border-0">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="card-title text-center mb-0">Predictions for {{ race.race_name }}</h2>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info text-center mb-4">
+                        <strong>Race Date & Time:</strong> {{ race.race_date.strftime('%B %d, %Y at %H:%M UTC') }}<br>
+                        <strong>Prediction Deadline:</strong> {{ deadline_date.strftime('%B %d, %Y at %H:%M UTC') }}
+                    </div>
+
+                    <form method="POST" action="{{ url_for('predict', race_id=race.id) }}">
+                        {{ form.hidden_tag() }}
+
+                        <!-- Podium Predictions -->
+                        <div class="card mb-4 border">
+                            <div class="card-header bg-light">
+                                <h4 class="mb-0">Podium Predictions</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            {{ form.p1.label(class="form-label fw-bold") }}
+                                            {{ form.p1(class="form-select") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            {{ form.p2.label(class="form-label fw-bold") }}
+                                            {{ form.p2(class="form-select") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            {{ form.p3.label(class="form-label fw-bold") }}
+                                            {{ form.p3(class="form-select") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Driver Predictions -->
+                        <div class="card mb-4 border">
+                            <div class="card-header bg-light">
+                                <h4 class="mb-0">Additional Driver Predictions</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            {{ form.last_place.label(class="form-label fw-bold") }}
+                                            {{ form.last_place(class="form-select") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            {{ form.dnf.label(class="form-label fw-bold") }}
+                                            {{ form.dnf(class="form-select") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            {{ form.fastest_lap.label(class="form-label fw-bold") }}
+                                            {{ form.fastest_lap(class="form-select") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Yes/No Predictions -->
+                        <div class="card mb-4 border">
+                            <div class="card-header bg-light">
+                                <h4 class="mb-0">Race Conditions</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            {{ form.safety_car.label(class="form-label fw-bold") }}
+                                            {{ form.safety_car(class="form-select") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            {{ form.red_flag.label(class="form-label fw-bold") }}
+                                            {{ form.red_flag(class="form-select") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            {{ form.wet_race.label(class="form-label fw-bold") }}
+                                            {{ form.wet_race(class="form-select") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Team Predictions -->
+                        <div class="card mb-4 border">
+                            <div class="card-header bg-light">
+                                <h4 class="mb-0">Team Predictions</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            {{ form.team_podium.label(class="form-label fw-bold") }}
+                                            {{ form.team_podium(class="form-select") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            {{ form.team_most_points.label(class="form-label fw-bold") }}
+                                            {{ form.team_most_points(class="form-select") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                                {% if prediction %}Update Predictions{% else %}Submit Predictions{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

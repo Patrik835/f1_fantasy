@@ -2,22 +2,39 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
+from flask_login import LoginManager
+from config import Config
 
 # Create an instance of Flask
 app = Flask(__name__)
-#add database
-#sqlite db
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-#mariajaws db
-# app.config['JAWSDB_MARIA_URL'] = "mysql://xl8a6x27iak68qvf:xfqm6rvfyqdcxp4i@un0jueuv2mam78uv.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306/axdd4me1qphqzzxu"
+app.config.from_object(Config)
 
-#secret key for forms
-app.config['SECRET_KEY'] = "Thisisasecretkey"
+# Initialize CSRF protection
+csrf = CSRFProtect()
+csrf.init_app(app)
 
-csrf = CSRFProtect(app)
+# Initialize database
 db = SQLAlchemy(app)
-app.app_context().push()
 migrate = Migrate(app, db)
 
+# Initialize login manager
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
 
-from flask_app import routes, scraper
+with app.app_context():
+    from flask_app import routes
+    db.create_all()
+
+    # Create default roles if they don't exist
+    from flask_app.models import Role
+    if not Role.query.filter_by(name='admin').first():
+        admin_role = Role(name='admin')
+        db.session.add(admin_role)
+    if not Role.query.filter_by(name='user').first():
+        user_role = Role(name='user')
+        db.session.add(user_role)
+    db.session.commit()
+
+def create_app():
+    return app

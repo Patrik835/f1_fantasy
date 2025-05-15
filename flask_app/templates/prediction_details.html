@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Prediction Details - {{ race.race_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="card-title text-center mb-0">Your Predictions for {{ race.race_name }}</h2>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info text-center mb-4">
+                        <strong>Race Date & Time:</strong> {{ race.race_date.strftime('%B %d, %Y at %H:%M UTC') }}<br>
+                        {% if prediction.points_earned > 0 %}
+                            <strong>Points Earned:</strong> {{ prediction.points_earned }}
+                        {% endif %}
+                    </div>
+
+                    <!-- Podium Predictions -->
+                    <div class="card mb-4 border">
+                        <div class="card-header bg-light">
+                            <h4 class="mb-0">Podium Predictions</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <p><strong>1st Place:</strong> {{ driver_map[prediction.p1] }}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p><strong>2nd Place:</strong> {{ driver_map[prediction.p2] }}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p><strong>3rd Place:</strong> {{ driver_map[prediction.p3] }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Driver Predictions -->
+                    <div class="card mb-4 border">
+                        <div class="card-header bg-light">
+                            <h4 class="mb-0">Additional Driver Predictions</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <p><strong>Last Place:</strong> {{ driver_map[prediction.last_place] }}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p><strong>DNF:</strong> {{ driver_map[prediction.dnf] }}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p><strong>Fastest Lap:</strong> {{ driver_map[prediction.fastest_lap] }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Race Conditions -->
+                    <div class="card mb-4 border">
+                        <div class="card-header bg-light">
+                            <h4 class="mb-0">Race Conditions</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <p><strong>Safety Car:</strong> {{ prediction.safety_car|title }}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p><strong>Red Flag:</strong> {{ prediction.red_flag|title }}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p><strong>Wet Race:</strong> {{ prediction.wet_race|title }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Team Predictions -->
+                    <div class="card mb-4 border">
+                        <div class="card-header bg-light">
+                            <h4 class="mb-0">Team Predictions</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Team with Two Drivers on Podium:</strong> {{ prediction.team_podium }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Team with Most Points:</strong> {{ prediction.team_most_points }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Back Button -->
+                    <div class="text-center">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-lg px-5">Back to Dashboard</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,313 +1,429 @@
-from flask import render_template, flash, redirect, url_for, session
-from flask_app.models import Users, QuizAnswers, QuizAnswersHistory
-from flask_app.forms import LoginForm, RegisterForm, QuizForm
-from flask_app.scraper import answers_list, get_number_of_the_race
+from flask import render_template, flash, redirect, url_for, session, request
+from flask_app.models import User, Role, Race, Prediction
+from flask_app.forms import LoginForm, RegisterForm, PredictionForm, AdminUserForm
+from flask_app.api_service import OpenF1API
 from flask_app import app, db
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from datetime import datetime, timedelta
-
+from datetime import datetime, timedelta, timezone
+from functools import wraps
 
 csrf = CSRFProtect(app)
-#flask login manager
+
+# Flask login manager
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
 @login_manager.user_loader
 def load_user(id):
-    return Users.query.get(int(id))
+    return User.query.get(int(id))
 
-def create_last_weeks_answer_summ(user_id, race_nr, previous_race):
-    user_quiz = QuizAnswers.query.get(user_id)
-    if user_quiz is None:
-        pass
-    else:
-        quiz_answers_history = QuizAnswersHistory(
-            user_id = user_id, previous_race = previous_race ,race_nr = race_nr, q1 = user_quiz.q1, q2 = user_quiz.q2,
-            q3 = user_quiz.q3, q4 = user_quiz.q4, q5 = user_quiz.q5, q6 = user_quiz.q6,
-            q7 = user_quiz.q7, q8 = user_quiz.q8, q9 = user_quiz.q9, q10 = user_quiz.q10,
-            q11 = user_quiz.q11, q12 = user_quiz.q12, points_for_race = points)
-        db.session.add(quiz_answers_history)
-        db.session.commit()
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role.name != 'admin':
+            flash('You do not have permission to access this page.', 'danger')
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    return decorated_function
 
-#index page
 @app.route("/")
 def index():
-    #getting needed values from the function
-    next_race, race_nr, race_d, previous_race = get_number_of_the_race()
-    deadline_date = race_d - timedelta(days=1)
-    #rendering the page with values
-    return render_template("index.html", next_race = next_race, race_nr = race_nr, race_d = race_d, deadline_date = deadline_date)
-#register page
+    next_race = OpenF1API.get_next_race()
+    if next_race:
+        race_date = datetime.fromisoformat(next_race['date_start'].replace('Z', '+00:00'))
+        # Ensure race_date is timezone-aware (UTC)
+        if race_date.tzinfo is None or race_date.tzinfo.utcoffset(race_date) is None:
+            race_date = race_date.replace(tzinfo=timezone.utc)
+        else:
+            race_date = race_date.astimezone(timezone.utc)
+        # Set deadline to one hour before race start
+        deadline_date = race_date - timedelta(hours=1)
+        current_date = datetime.now(timezone.utc)
+        time_until_race = race_date - current_date
+        
+        # Calculate days, hours, and minutes
+        days = time_until_race.days
+        hours = time_until_race.seconds // 3600
+        minutes = (time_until_race.seconds % 3600) // 60
+        
+        countdown = f"{days} days, {hours} hours, and {minutes} minutes"
+        
+        return render_template("index.html", 
+                             next_race=next_race['meeting_name'],
+                             race_date=race_date,
+                             deadline_date=deadline_date,
+                             countdown=countdown)
+    return render_template("index.html", next_race=None)
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    #get the form
     form = RegisterForm()
-    #validate form
-    try:
-        if form.validate_on_submit():
-            #get users from db table to check if user exists
-            user = Users.query.filter_by(username=form.username.data, email=form.email.data, password = form.password.data).first()  
-            #if does not exist, create new user
-            if user is None:
-                #hash the password
-                hash_pw = generate_password_hash(form.password.data, 'SHA256')
-                # create new user
-                user = Users(username = form.username.data, email = form.email.data, password_hash = hash_pw)
-                db.session.add(user)             # add new user to database
-                db.session.commit()              # commit changes to database
-                flash("You have successfully registered")
-                return redirect(url_for('dashboard'))
-    except:
-            flash("Username or email already exists")
-            return redirect(url_for('register'))
-    return render_template("register.html", form = form)
-#log in page
+    if form.validate_on_submit():
+        try:
+            # Get the default user role
+            user_role = Role.query.filter_by(name='user').first()
+            if not user_role:
+                user_role = Role(name='user')
+                db.session.add(user_role)
+                db.session.commit()
+
+            # Create new user
+            user = User(
+                username=form.username.data,
+                email=form.email.data,
+                role=user_role
+            )
+            user.password = form.password.data
+            db.session.add(user)
+            db.session.commit()
+            flash("Registration successful! Please login.", "success")
+            return redirect(url_for('login'))
+        except Exception as e:
+            flash(f"Registration failed: {str(e)}", "danger")
+    return render_template("register.html", form=form)
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     form = LoginForm()
-    #validate form
     if form.validate_on_submit():
-        # check if user exists
-        user = Users.query.filter_by(username=form.username.data).first()
-        #check if password is correct
-        if user:
-            if check_password_hash(user.password_hash, form.password.data):
-                login_user(user)                  # log in the user
-                flash("You have successfully logged in")
-                session['logged_in'] = True
-                return redirect(url_for('dashboard'))
-        #if pasword or username is incorrect
-        else:
-                session['logged_in'] = False
-                flash(f"Password or username is incorrect - Try again")
-    return render_template("login.html", form = form)
-#log out page
-@app.route("/logout", methods=["GET", "POST"])
+        user = User.query.filter_by(username=form.username.data).first()
+        if user and user.verify_password(form.password.data):
+            login_user(user)
+            flash("Login successful!", "success")
+            return redirect(url_for('dashboard'))
+        flash("Invalid username or password", "danger")
+    return render_template("login.html", form=form)
+
+@app.route("/logout")
 @login_required
 def logout():
     logout_user()
-    session['logged_in'] = False
-    flash("You have successfully logged out")
+    flash("You have been logged out", "info")
     return redirect(url_for('login'))
 
-@app.route("/delete_all_inputs", methods=["GET", "POST"])
-@login_required
-def delete_all_inputs_and_add_to_history():
-    id = current_user.id
-    if id == 9: 
-        try:
-            users = Users.query.all()
-            user_ids = [user.id for user in users]
-            race_name, race_nr, race_date, previous_race = get_number_of_the_race()
-            race_nr -= 1
-            for id in user_ids:
-                create_last_weeks_answer_summ(id, race_nr, previous_race)
-            db.session.query(QuizAnswers).delete()
-            db.session.commit()
-            flash("All inputs deleted successfully")
-            return redirect(url_for('admin'))
-        except Exception as e:
-            flash(f"error{e}")
-            return redirect(url_for('admin'))
-    else:
-        flash("You do not have access to this page, must be admin")
-        return redirect(url_for('dashboard'))
-    
-@app.route("/delete/<int:id>", methods=["GET", "POST"])
-def delete(id):
-    ide = current_user.id
-    if ide == 9: 
-        user_to_delete = Users.query.get_or_404(id)
-        try:
-            user_to_delete_2 = QuizAnswers.query.get_or_404(id)
-        except:
-            user_to_delete_2 = None
-        username = None
-        form = LoginForm()
-        try:
-            db.session.delete(user_to_delete)
-            if user_to_delete_2 != None:
-                db.session.delete(user_to_delete_2)
-            db.session.commit()
-            flash("User successfully deleted")
-            our_users = Users.query.order_by(Users.date_created)
-            return render_template("admin.html",form=form, username = username, our_users = our_users)
-        except:
-            flash("There was a problem deleting that user")
-            return render_template("admin.html",form=form, username = username)
-    else:
-        flash("You do not have access to this page, must be admin")
-        return redirect(url_for('dashboard'))
-
-@app.route("/dashboard", methods=["GET", "POST"])
+@app.route("/dashboard")
 @login_required
 def dashboard():
-    current_answers = QuizAnswers.query.get(current_user.id)
-    return render_template("dashboard.html" , current_answers = current_answers)
-
-@app.route("/history_answers", methods=["GET", "POST"])
-@login_required
-def history_answers():
-    #make query to show all the users rows in the quiz answers history table
-    current_answers = QuizAnswersHistory.query.filter_by(user_id=current_user.id).all()
-    return render_template("users_history.html" , current_answers = current_answers)
-
-@app.route("/quiz_form", methods=["GET", "POST"])
-@login_required
-def quiz_form():
-    next_race, race_nr, race_d, previous_race = get_number_of_the_race()
-    today = datetime.now().date()
-    if  today == race_d:
-        flash("Deadline for quiz has passed, try again next week!")
-        return redirect(url_for('index'))
-    else:
-        form = QuizForm()
-        user_quiz = QuizAnswers.query.get(current_user.id)
-        if user_quiz:
-            form.q1.default = user_quiz.q1
-            form.q2.default = user_quiz.q2
-            form.q3.default = user_quiz.q3
-            form.q4.default = user_quiz.q4
-            form.q5.default = user_quiz.q5
-            form.q6.default = user_quiz.q6
-            form.q7.default = user_quiz.q7
-            form.q8.default = user_quiz.q8
-            form.q9.default = user_quiz.q9
-            form.q10.default = user_quiz.q10
-            form.q11.default = user_quiz.q11
-            form.q12.default = user_quiz.q12
-            form.process()
-        else:
-            pass
-        if not user_quiz:
-            user_quiz = QuizAnswers(user_id=current_user.id)  # Create a new QuizAnswers object
-        if form.validate_on_submit():
-            form = QuizForm()
-            user_quiz.q1 = form.q1.data
-            user_quiz.q2 = form.q2.data
-            user_quiz.q3 = form.q3.data
-            user_quiz.q4 = form.q4.data
-            user_quiz.q5 = form.q5.data
-            user_quiz.q6 = form.q6.data
-            user_quiz.q7 = form.q7.data
-            user_quiz.q8 = form.q8.data
-            user_quiz.q9 = form.q9.data
-            user_quiz.q10 = form.q10.data
-            user_quiz.q11 = form.q11.data
-            user_quiz.q12 = form.q12.data
-            db.session.add(user_quiz)
+    next_race = OpenF1API.get_next_race()
+    if next_race:
+        race_date = datetime.fromisoformat(next_race['date_start'].replace('Z', '+00:00'))
+        deadline_date = race_date - timedelta(hours=1)
+        
+        # Get user's prediction for next race if exists
+        race = Race.query.filter_by(meeting_key=next_race['meeting_key']).first()
+        if not race:
+            race = Race(
+                meeting_key=next_race['meeting_key'],
+                race_name=next_race['meeting_name'],
+                race_date=race_date
+            )
+            db.session.add(race)
             db.session.commit()
-            flash("You have successfully completed the quiz")
-            return redirect(url_for('dashboard'))
-        return render_template("quiz_form.html", form = form, next_race = next_race, race_nr=race_nr)
+        
+        prediction = Prediction.query.filter_by(
+            user_id=current_user.id,
+            race_id=race.id
+        ).first()
+        
+        return render_template("dashboard.html",
+                             next_race=race,
+                             deadline_date=deadline_date,
+                             prediction=prediction)
+    return render_template("dashboard.html", next_race=None)
 
-@app.route("/user_standings")
+@app.route("/predict/<int:race_id>", methods=["GET", "POST"])
+@login_required
+def predict(race_id):
+    race = Race.query.get_or_404(race_id)
+    current_time = datetime.now(timezone.utc)
+    
+    # Ensure race date is timezone-aware
+    if race.race_date.tzinfo is None:
+        race.race_date = race.race_date.replace(tzinfo=timezone.utc)
+    
+    # Check if race has started (1 hour before race)
+    if current_time > race.race_date - timedelta(hours=1):
+        flash("Prediction deadline has passed. Predictions are locked from 1 hour before the race.", "danger")
+        return redirect(url_for('dashboard'))
+    
+    # Get existing prediction if it exists
+    prediction = Prediction.query.filter_by(
+        user_id=current_user.id,
+        race_id=race.id
+    ).first()
+    
+    # If prediction exists and has been evaluated, don't allow editing
+    if prediction and prediction.points_earned > 0:
+        flash("This race has already been evaluated. Predictions cannot be modified.", "danger")
+        return redirect(url_for('dashboard'))
+    
+    form = PredictionForm()
+    
+    # Get drivers from API
+    drivers = OpenF1API.get_drivers(0)  # session_key is ignored now
+    driver_choices = [(d['permanentNumber'], f"{d['givenName']} {d['familyName']}") for d in drivers]
+    form.p1.choices = driver_choices
+    form.p2.choices = driver_choices
+    form.p3.choices = driver_choices
+    form.last_place.choices = driver_choices
+    form.dnf.choices = driver_choices
+    form.fastest_lap.choices = driver_choices
+    
+    # Get teams from API
+    teams = OpenF1API.get_team_points(0)  # session_key is ignored now
+    team_choices = [(t['Constructor']['constructorId'], t['Constructor']['name']) for t in teams]
+    form.team_podium.choices = team_choices
+    form.team_most_points.choices = team_choices
+    
+    # If it's a GET request and we have an existing prediction, populate the form
+    if request.method == 'GET' and prediction:
+        form.p1.data = prediction.p1
+        form.p2.data = prediction.p2
+        form.p3.data = prediction.p3
+        form.last_place.data = prediction.last_place
+        form.dnf.data = prediction.dnf
+        form.fastest_lap.data = prediction.fastest_lap
+        form.team_podium.data = prediction.team_podium
+        form.team_most_points.data = prediction.team_most_points
+        form.safety_car.data = prediction.safety_car
+        form.red_flag.data = prediction.red_flag
+        form.wet_race.data = prediction.wet_race
+    
+    if form.validate_on_submit():
+        if prediction:
+            # Update existing prediction
+            prediction.p1 = form.p1.data
+            prediction.p2 = form.p2.data
+            prediction.p3 = form.p3.data
+            prediction.last_place = form.last_place.data
+            prediction.dnf = form.dnf.data
+            prediction.fastest_lap = form.fastest_lap.data
+            prediction.team_podium = form.team_podium.data
+            prediction.team_most_points = form.team_most_points.data
+            prediction.safety_car = form.safety_car.data
+            prediction.red_flag = form.red_flag.data
+            prediction.wet_race = form.wet_race.data
+            flash("Your prediction has been updated!", "success")
+        else:
+            # Create new prediction
+            prediction = Prediction(
+                user_id=current_user.id,
+                race_id=race.id,
+                p1=form.p1.data,
+                p2=form.p2.data,
+                p3=form.p3.data,
+                last_place=form.last_place.data,
+                dnf=form.dnf.data,
+                fastest_lap=form.fastest_lap.data,
+                team_podium=form.team_podium.data,
+                team_most_points=form.team_most_points.data,
+                safety_car=form.safety_car.data,
+                red_flag=form.red_flag.data,
+                wet_race=form.wet_race.data
+            )
+            db.session.add(prediction)
+            flash("Your prediction has been saved!", "success")
+        
+        db.session.commit()
+        return redirect(url_for('dashboard'))
+    
+    # Calculate deadline (1 hour before race)
+    deadline_date = race.race_date - timedelta(hours=1)
+    
+    return render_template("predict.html", form=form, race=race, deadline_date=deadline_date, prediction=prediction)
+
+@app.route("/standings")
 @login_required
 def user_standings():
-    our_users = Users.query.order_by(Users.points.desc())
-    return render_template("tables.html",our_users = our_users)
-
-@app.route("/rules")
-def rules():
-
-    return render_template("rules.html")
+    users = User.query.order_by(User.points.desc()).all()
+    return render_template("standings.html", users=users)
 
 @app.route("/admin")
 @login_required
+@admin_required
 def admin():
-    id = current_user.id
-    if id ==9:
-        our_users = Users.query.order_by(Users.date_created)
-        return render_template("admin.html",our_users = our_users)
-    else:
-        flash("You do not have access to this page, must be admin")
-        return redirect(url_for('dashboard'))
-    
-@app.route("/evaluation")
-@login_required
-def evaluation():
-    global points
-    id = current_user.id
-    if id == 9:       
-        evaluated_answers = answers_list()  
-        answers = QuizAnswers.query.all()
-        for answer in answers:
-            points = 0
-            if answer.q1 == evaluated_answers[0]:
-                points += 2
-            elif answer.q1 != evaluated_answers[0]:
-                points -= 1
-            if answer.q2 == evaluated_answers[1]:
-                points += 2
-            elif answer.q2 != evaluated_answers[1]:
-                points -= 1
-            if answer.q3 == evaluated_answers[2]:
-                points += 2
-            elif answer.q3 != evaluated_answers[2]:
-                points -= 1
-            if answer.q4 == evaluated_answers[3]:
-                points += 2
-            elif answer.q4 != evaluated_answers[3]:
-                points -= 1
-            if answer.q5 in evaluated_answers[4]:
-                points += 2
-            elif len(evaluated_answers[5]) == 0 and answer.q5 == 'nobody':
-                points += 2
-            elif answer.q5 not in evaluated_answers[4]:
-                points -= 1
-            if answer.q6 == evaluated_answers[5]:
-                points += 2
-            elif answer.q6 != evaluated_answers[5]:
-                points -= 1
-            if answer.q7 == evaluated_answers[6]:
-                points += 2
-            elif answer.q7 == 'unanswered':
-                points += 0
-            else:
-                points -= 1
-            if answer.q8 == evaluated_answers[7]:
-                points += 2
-            elif answer.q8 == 'unanswered':
-                points += 0
-            else:
-                points -= 1
-            if answer.q9 == evaluated_answers[8]:
-                points += 2
-            elif answer.q9 == 'unanswered':
-                points += 0
-            else:
-                points -= 1
-            if answer.q10 == evaluated_answers[9]:
-                points += 2
-            if answer.q11 == evaluated_answers[10]:
-                points += 2
-            if answer.q12 == evaluated_answers[11]:
-                points += 2
-            if points < 0:
-                points == 0
-            id = answer.user_id
-            user = Users.query.get_or_404(id)         
-            user.points += points
-            db.session.commit()
-        return render_template("admin.html")
-    else:
-        flash("You do not have access to this page, must be admin")
-        return redirect(url_for('dashboard'))
-    
-@app.route("/quiz_answers_history")
-@login_required
-def quiz_answers_history():
-    id = current_user.id
-    if id == 9: 
-        users = Users.query.all()
-        user_ids = [user.id for user in users]
-        race_name, race_nr, race_date, previous_race = get_number_of_the_race()
-        for id in user_ids:
-            create_last_weeks_answer_summ(id, race_nr)
+    users = User.query.all()
+    roles = Role.query.all()
+    form = AdminUserForm()
+    return render_template("admin.html", users=users, roles=roles, form=form)
 
+@app.route("/admin/user/<int:user_id>", methods=["GET", "POST"])
+@login_required
+@admin_required
+def edit_user(user_id):
+    user = User.query.get_or_404(user_id)
+    form = AdminUserForm()
+    form.role.choices = [(r.id, r.name) for r in Role.query.all()]
+    
+    if form.validate_on_submit():
+        user.username = form.username.data
+        user.email = form.email.data
+        user.role_id = form.role.data
+        db.session.commit()
+        flash("User updated successfully", "success")
+        return redirect(url_for('admin'))
+    
+    form.username.data = user.username
+    form.email.data = user.email
+    form.role.data = user.role_id
+    return render_template("edit_user.html", form=form, user=user)
+
+@app.route("/admin/evaluate/<int:race_id>")
+@login_required
+@admin_required
+def evaluate_predictions(race_id):
+    race = Race.query.get_or_404(race_id)
+    if not race.is_completed:
+        flash("Race is not completed yet", "danger")
+        return redirect(url_for('admin'))
+    
+    predictions = Prediction.query.filter_by(race_id=race.id).all()
+    results = OpenF1API.get_race_results(0)
+    
+    for prediction in predictions:
+        points = 0
+        # Evaluate predictions and calculate points
+        # (Implementation depends on your scoring system)
+        
+        prediction.points_earned = points
+        user = User.query.get(prediction.user_id)
+        user.points += points
+    
+    db.session.commit()
+    flash("Predictions evaluated successfully", "success")
+    return redirect(url_for('admin'))
+
+@app.route("/prediction/<int:prediction_id>")
+@login_required
+def view_prediction(prediction_id):
+    prediction = Prediction.query.get_or_404(prediction_id)
+    
+    # Ensure user can only view their own predictions
+    if prediction.user_id != current_user.id:
+        flash("You can only view your own predictions.", "danger")
+        return redirect(url_for('dashboard'))
+    
+    # Get driver names for better readability
+    drivers = OpenF1API.get_drivers(0)
+    driver_map = {d['permanentNumber']: f"{d['givenName']} {d['familyName']}" for d in drivers}
+    
+    return render_template("prediction_details.html", 
+                         prediction=prediction, 
+                         race=prediction.race,
+                         driver_map=driver_map)
+
+@app.route('/admin/races')
+@login_required
+@admin_required
+def admin_races():
+    races = Race.query.order_by(Race.race_date.desc()).all()
+    now = datetime.now(timezone.utc)
+    
+    # Ensure all race dates are timezone-aware
+    for race in races:
+        if race.race_date.tzinfo is None:
+            race.race_date = race.race_date.replace(tzinfo=timezone.utc)
+    
+    print(f"Admin races route called. Found {len(races)} races:")
+    for race in races:
+        print(f"- {race.race_name} ({race.race_date})")
+    return render_template('admin/races.html', races=races, now=now)
+
+@app.route('/admin/race/<int:race_id>/evaluate', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def evaluate_race(race_id):
+    race = Race.query.get_or_404(race_id)
+    form = AdminUserForm()  # Create a form instance for CSRF protection
+    
+    if request.method == 'POST':
+        # Get race results from API
+        current_year = datetime.now().year
+        race_results = OpenF1API.get_race_results(current_year, race.meeting_key)
+        
+        if not race_results:
+            flash('Could not fetch race results from API', 'danger')
+            return redirect(url_for('admin_races'))
+        
+        # Extract actual results from API data
+        results = race_results['Results']
+        actual_results = {
+            'p1': results[0]['Driver']['permanentNumber'],
+            'p2': results[1]['Driver']['permanentNumber'],
+            'p3': results[2]['Driver']['permanentNumber'],
+            'last_place': results[-1]['Driver']['permanentNumber'],
+            'dnf': next((r['Driver']['permanentNumber'] for r in results if r['status'] != 'Finished'), None),
+            'fastest_lap': next((r['Driver']['permanentNumber'] for r in results if r.get('FastestLap', {}).get('rank') == '1'), None),
+            'team_podium': results[0]['Constructor']['constructorId'],
+            'team_most_points': max(
+                (team for team in results),
+                key=lambda x: int(x['points'])
+            )['Constructor']['constructorId'],
+            'safety_car': 'yes' if any(r.get('status') == 'Safety Car' for r in results) else 'no',
+            'red_flag': 'yes' if any(r.get('status') == 'Red Flag' for r in results) else 'no',
+            'wet_race': 'yes' if any(r.get('status') == 'Wet Race' for r in results) else 'no'
+        }
+        
+        # Get all predictions for this race
+        predictions = Prediction.query.filter_by(race_id=race_id).all()
+        
+        for prediction in predictions:
+            points = 0
+            
+            # Check podium positions (3 points each)
+            if prediction.p1 == actual_results['p1']:
+                points += 3
+            if prediction.p2 == actual_results['p2']:
+                points += 3
+            if prediction.p3 == actual_results['p3']:
+                points += 3
+                
+            # Check last place (2 points)
+            if prediction.last_place == actual_results['last_place']:
+                points += 2
+                
+            # Check DNF (2 points)
+            if prediction.dnf == actual_results['dnf']:
+                points += 2
+                
+            # Check fastest lap (2 points)
+            if prediction.fastest_lap == actual_results['fastest_lap']:
+                points += 2
+                
+            # Check team predictions (2 points each)
+            if prediction.team_podium == actual_results['team_podium']:
+                points += 2
+            if prediction.team_most_points == actual_results['team_most_points']:
+                points += 2
+                
+            # Check race conditions (1 point each)
+            if prediction.safety_car == actual_results['safety_car']:
+                points += 1
+            if prediction.red_flag == actual_results['red_flag']:
+                points += 1
+            if prediction.wet_race == actual_results['wet_race']:
+                points += 1
+            
+            # Update prediction points
+            prediction.points_earned = points
+            
+            # Update user's total points
+            user = prediction.user
+            user.points += points
+        
+        # Mark race as completed
+        race.is_completed = True
+        
+        db.session.commit()
+        flash('Race has been evaluated successfully!', 'success')
+        return redirect(url_for('admin_races'))
+    
+    # For GET request, show confirmation page
+    return render_template('admin/evaluate_race.html', race=race, form=form)
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template("404.html")
+    return render_template("404.html"), 404

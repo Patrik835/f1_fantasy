@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Race Management</h2>
+    
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Race Name</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for race in races %}
+                <tr>
+                    <td>{{ race.race_name }}</td>
+                    <td>{{ race.race_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>
+                        {% if race.is_completed %}
+                            <span class="badge bg-success">Completed</span>
+                        {% elif race.race_date < now %}
+                            <span class="badge bg-info">Finished</span>
+                        {% else %}
+                            <span class="badge bg-warning">Upcoming</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if race.is_completed %}
+                            <button class="btn btn-secondary btn-sm" disabled>
+                                Already Evaluated
+                            </button>
+                        {% elif race.race_date < now %}
+                            <a href="{{ url_for('evaluate_race', race_id=race.id) }}" 
+                               class="btn btn-primary btn-sm">
+                                Evaluate Race
+                            </a>
+                        {% else %}
+                            <button class="btn btn-secondary btn-sm" disabled>
+                                Race Not Finished
+                            </button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %} 

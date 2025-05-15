@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Standings{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">F1 Fantasy Standings</h2>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th scope="col" class="text-center">Rank</th>
+                                    <th scope="col">Username</th>
+                                    <th scope="col" class="text-center">Points</th>
+                                    <th scope="col" class="text-center">Predictions</th>
+                                    <th scope="col" class="text-center">Last Updated</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr {% if user.id == current_user.id %}class="table-primary"{% endif %}>
+                                    <td class="text-center">
+                                        {% if loop.index == 1 %}
+                                        <i class="fas fa-trophy text-warning"></i>
+                                        {% elif loop.index == 2 %}
+                                        <i class="fas fa-medal text-secondary"></i>
+                                        {% elif loop.index == 3 %}
+                                        <i class="fas fa-medal text-danger"></i>
+                                        {% else %}
+                                        {{ loop.index }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ user.username }}
+                                        {% if user.id == current_user.id %}
+                                        <span class="badge bg-primary">You</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">{{ user.points }}</td>
+                                    <td class="text-center">{{ user.predictions|length }}</td>
+                                    <td class="text-center">
+                                        {% if user.predictions %}
+                                        {{ user.predictions[-1].created_at.strftime('%Y-%m-%d') }}
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if not users %}
+                    <div class="text-center text-muted py-4">
+                        <p class="mb-0">No users have made predictions yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

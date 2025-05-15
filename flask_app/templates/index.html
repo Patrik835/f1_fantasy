@@ -1,50 +1,66 @@
 {% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
 {% block content %}
-{% for message in get_flashed_messages() %}
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
-{% endfor %}
-<header class="bg-dark py-5">
-    <div class="container px-5">
-        <div class="row gx-5 justify-content-center">
-            <div class="col-lg-6">
-                <div class="text-center my-5">
-                    <h1 class="display-5 fw-bolder text-white mb-2">Formula 1 Fantasy Game</h1>
-                    <p class="lead text-white-50 mb-4">Great game for Formula 1 fans to play with friends during whole season!</p>
-                    <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
-						{% if session.logged_in %}
-						<a class="btn btn-primary btn-lg px-4 me-sm-3" href="{{url_for('quiz_form')}}">Fill the Quiz</a><a class="btn btn-outline-light btn-lg px-4" href="{{url_for('rules')}}">Rules</a>
-						{% else %}
-						<a class="btn btn-primary btn-lg px-4 me-sm-3" href="{{url_for('login')}}">Log In</a><a class="btn btn-outline-light btn-lg px-4" href="{{url_for('register')}}">Register</a>
-						{% endif %}
-					</div>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h1 class="display-4 mb-4">Welcome to F1 Fantasy</h1>
+            <p class="lead mb-4">Predict race outcomes and compete with other F1 fans!</p>
+            
+            {% if next_race %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="card-title">Next Race: {{ next_race }}</h2>
+                    <p class="card-text">
+                        <strong>Race starts in:</strong> <span class="text-danger">{{ countdown }}</span><br>
+                        <strong>Race Date & Time:</strong> {{ race_date.strftime('%B %d, %Y at %H:%M UTC') }}<br>
+                        <strong>Prediction Deadline:</strong> {{ deadline_date.strftime('%B %d, %Y at %H:%M UTC') }}
+                    </p>
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Make Predictions</a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-primary">Login to Predict</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                No upcoming races scheduled at the moment.
+            </div>
+            {% endif %}
+            
+            <div class="row mt-5">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <i class="fas fa-trophy fa-3x mb-3 text-warning"></i>
+                            <h3 class="card-title">Compete</h3>
+                            <p class="card-text">Test your F1 knowledge and compete with other fans!</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <i class="fas fa-chart-line fa-3x mb-3 text-success"></i>
+                            <h3 class="card-title">Track Progress</h3>
+                            <p class="card-text">Monitor your performance and climb the leaderboard!</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <i class="fas fa-users fa-3x mb-3 text-info"></i>
+                            <h3 class="card-title">Join Community</h3>
+                            <p class="card-text">Be part of an active F1 fantasy community!</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</header>
-<section class="py-5 border-bottom" id="features">
-    <div class="container px-5 my-5">
-        <div class="row gx-5">
-            <div class="col-lg-4 mb-5 mb-lg-0">
-                <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-collection"></i></div>
-                <h2 class="h4 fw-bolder">Upcoming: {{next_race}}</h2>
-                <p>The next race <b> number {{race_nr}} </b> is going to be <b> {{next_race}}</b> , 20 drivers, 10 teams only one winner!</p>
-            </div>
-            <div class="col-lg-4 mb-5 mb-lg-0">
-                <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-building"></i></div>
-                <h2 class="h4 fw-bolder">Deadline to fill the quiz!</h2>
-                <p>Deadline to fill the quiz for {{next_race}} is <b>{{deadline_date}} 23:59</b>. Race starts <b>{{race_d}}!</b> </p>
-				<a class="text-decoration-none" href="{{url_for('quiz_form')}}">Go Fill your quiz now!<i class="bi bi-arrow-right"></i></a>
-            </div>
-            <div class="col-lg-4">
-                <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-toggles2"></i></div>
-                <h2 class="h4 fw-bolder">Standings</h2>
-                <p>Standings will be updated on sunday {{race_d}} 23:00 after the race.</p><a class="text-decoration-none" href="{{url_for('user_standings')}}">To see the current standings click here!<i class="bi bi-arrow-right"></i></a>
-            </div>
-        </div>
-    </div>
-</section>
+</div>
 {% endblock %}
