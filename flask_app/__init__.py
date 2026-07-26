@@ -22,12 +22,15 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-with app.app_context():
-    from flask_app import routes
-    db.create_all()
+@login_manager.user_loader
+def load_user(user_id):
+    from flask_app.models import User
+    return db.session.get(User, int(user_id))
 
-    # Create default roles if they don't exist
+
+def seed_default_roles():
     from flask_app.models import Role
+
     if not Role.query.filter_by(name='admin').first():
         admin_role = Role(name='admin')
         db.session.add(admin_role)
@@ -36,5 +39,20 @@ with app.app_context():
         db.session.add(user_role)
     db.session.commit()
 
+
+def init_db():
+    db.create_all()
+    seed_default_roles()
+
+
+@app.cli.command("init-db")
+def init_db_command():
+    init_db()
+    print("Initialized database and default roles.")
+
+
 def create_app():
     return app
+
+
+from flask_app import routes

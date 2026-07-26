@@ -1,117 +1,91 @@
 # F1 Fantasy League
 
-A web application for F1 Fantasy League predictions and scoring.
+A Flask web app for Formula 1 fantasy predictions, scoring, standings, and admin race evaluation.
 
 ## Features
 
-- User registration and authentication
-- Race predictions for upcoming F1 races
-- Automatic race evaluation using the OpenF1 API
+- User registration and login
+- Upcoming race dashboard
+- Prediction create and update flow
 - Points calculation and standings
-- Admin dashboard for race management
+- Admin dashboard with user editing
+- Admin race management and evaluation
+- Race, driver, constructor, and result data from the Jolpi Ergast API proxy
 
-## Prerequisites
+## Requirements
 
-- Python 3.8 or higher
-- pip (Python package manager)
-- Git
+- Python 3.8 or newer
+- pip
+- SQLite for local development
 
 ## Installation
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/f1_fantasy.git
-cd f1_fantasy
-```
-
-2. Create and activate a virtual environment:
 ```bash
 python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-```
-
-3. Install dependencies:
-```bash
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-4. Set up environment variables:
-```bash
-cp .env.example .env
-```
-Edit `.env` and set your configuration values.
+Optional environment variables:
 
-5. Initialize the database:
 ```bash
-flask db upgrade
+SECRET_KEY=change-me
+DATABASE_URL=sqlite:///f1_fantasy.db
+JOLPI_ERGAST_API_BASE_URL=https://api.jolpi.ca/ergast/f1
 ```
 
-## Running the Application
+## Database Setup
 
-### Development
+For a new local database, initialize tables and seed the default `admin` and `user` roles:
+
 ```bash
-flask run
+flask --app flask_app init-db
 ```
 
-### Production
+If you are using migrations instead, run:
+
+```bash
+flask --app flask_app db upgrade
+flask --app flask_app init-db
+```
+
+## Running
+
+Development:
+
+```bash
+flask --app flask_app run
+```
+
+You can also run the local entry point, which initializes the database before starting the server:
+
+```bash
+python app.py
+```
+
+Production example:
+
 ```bash
 gunicorn -w 4 -b 0.0.0.0:8000 "flask_app:create_app()"
 ```
 
-## Project Structure
-
-```
-f1_fantasy/
-├── flask_app/
-│   ├── __init__.py
-│   ├── models.py
-│   ├── routes.py
-│   ├── forms.py
-│   ├── api_service.py
-│   └── templates/
-├── migrations/
-├── instance/
-├── .env.example
-├── config.py
-├── requirements.txt
-└── README.md
-```
-
 ## API Integration
 
-The application uses the OpenF1 API (via jolpi.ca proxy) to fetch:
-- Race schedules
-- Driver information
-- Team standings
-- Race results
+The app uses the Jolpi Ergast API proxy at `https://api.jolpi.ca/ergast/f1` by default. The integration fetches:
 
-## Contributing
+- Next race schedule
+- Driver list
+- Constructor standings
+- Race results for evaluation
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+The API base URL can be overridden with `JOLPI_ERGAST_API_BASE_URL`.
 
-## License
+## Testing
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+Run the smoke tests with:
 
-# F1 Fantasy Fullstack Project
-#### Formula one fantasy game with evaluation from api.
-Created with Python flask app with SQLite db getting information from https://documenter.getpostman.com/view/11586746/SztEa7bL#intro api.
+```bash
+.venv/bin/python -m pytest -q
+```
 
-##### To run the app install all the requirements and run: python3/python app.py .
-
-### Rules
-- This is a formula Fantasy game where players predict the race results by answering the questions
-- User can submit filled qiuz for the next race from monday after last race till the saturday 23:59 before the next race. On the race day is the form locked.
-- It is possible to update the form by filling it again. As many times as you want.
-- After race the quiz is evaluated and points are given
-- Answers are evaluated after the race at 23:00
-- Users can check their points and ranking and quiz history as well
-- The winner is the one with most points at the end of the formula 1 season :bomb:
-#### Have Fun and Good Luck! :rocket:
-
-All the rules to play the game are in "rules" path as well.
-
+The smoke suite covers registration, login, dashboard rendering, prediction create/update, admin access, race management, and idempotent race evaluation with mocked API responses.

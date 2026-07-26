@@ -12,5 +12,8 @@ class Config:
     # Session configuration
     PERMANENT_SESSION_LIFETIME = timedelta(days=1)
     
-    # OpenF1 API configuration
-    OPENF1_API_BASE_URL = 'https://api.openf1.org/v1' 
+    # Jolpi Ergast API proxy configuration
+    JOLPI_ERGAST_API_BASE_URL = os.environ.get(
+        'JOLPI_ERGAST_API_BASE_URL',
+        'https://api.jolpi.ca/ergast/f1',
+    )

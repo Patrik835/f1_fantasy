@@ -1,24 +1,12 @@
-from flask import render_template, flash, redirect, url_for, session, request
+from flask import render_template, flash, redirect, url_for, request
 from flask_app.models import User, Role, Race, Prediction
 from flask_app.forms import LoginForm, RegisterForm, PredictionForm, AdminUserForm
-from flask_app.api_service import OpenF1API
+from flask_app.api_service import JolpiErgastAPI
 from flask_app import app, db
-from flask_wtf.csrf import CSRFProtect
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from datetime import datetime, timedelta, timezone
+from flask_app.time_utils import parse_api_datetime, prediction_deadline, to_utc_aware, to_utc_naive, utc_now
+from flask_login import login_user, login_required, logout_user, current_user
+from flask_wtf import FlaskForm
 from functools import wraps
-
-csrf = CSRFProtect(app)
-
-# Flask login manager
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
-
-@login_manager.user_loader
-def load_user(id):
-    return User.query.get(int(id))
 
 def admin_required(f):
     @wraps(f)
@@ -29,19 +17,119 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
+def get_current_user_rank():
+    ranked_users = User.query.order_by(User.points.desc(), User.username.asc()).all()
+    for index, user in enumerate(ranked_users, start=1):
+        if user.id == current_user.id:
+            return index
+    return None
+
+
+def get_race_status(race):
+    if race.is_completed:
+        return "Completed"
+    if to_utc_aware(race.race_date) < utc_now():
+        return "Finished"
+    return "Upcoming"
+
+
+def build_admin_form():
+    form = AdminUserForm()
+    form.role.choices = [(role.id, role.name) for role in Role.query.order_by(Role.name).all()]
+    return form
+
+
+def driver_number(result):
+    driver = result.get('Driver') or {}
+    return driver.get('permanentNumber') or driver.get('driverId')
+
+
+def constructor_id(result):
+    constructor = result.get('Constructor') or {}
+    return constructor.get('constructorId')
+
+
+def numeric_points(result):
+    try:
+        return float(result.get('points', 0) or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def did_not_finish(result):
+    status = (result.get('status') or '').strip().lower()
+    position_text = result.get('positionText')
+    return status not in {'finished', '+1 lap', '+2 laps'} and position_text == 'R'
+
+
+def build_actual_results(race_results):
+    results = (race_results or {}).get('Results') or []
+    classified_results = [result for result in results if driver_number(result)]
+    if len(classified_results) < 3:
+        return None
+
+    team_points = {}
+    for result in classified_results:
+        team = constructor_id(result)
+        if team:
+            team_points[team] = team_points.get(team, 0) + numeric_points(result)
+
+    fastest_lap = next(
+        (
+            driver_number(result)
+            for result in classified_results
+            if (result.get('FastestLap') or {}).get('rank') == '1'
+        ),
+        None,
+    )
+    dnf = next((driver_number(result) for result in classified_results if did_not_finish(result)), None)
+
+    return {
+        'p1': driver_number(classified_results[0]),
+        'p2': driver_number(classified_results[1]),
+        'p3': driver_number(classified_results[2]),
+        'last_place': driver_number(classified_results[-1]),
+        'dnf': dnf,
+        'fastest_lap': fastest_lap,
+        'team_podium': constructor_id(classified_results[0]),
+        'team_most_points': max(team_points, key=team_points.get) if team_points else None,
+        'safety_car': 'no',
+        'red_flag': 'no',
+        'wet_race': 'no',
+    }
+
+
+def score_prediction(prediction, actual_results):
+    points = 0
+    scoring_rules = {
+        'p1': 3,
+        'p2': 3,
+        'p3': 3,
+        'last_place': 2,
+        'dnf': 2,
+        'fastest_lap': 2,
+        'team_podium': 2,
+        'team_most_points': 2,
+        'safety_car': 1,
+        'red_flag': 1,
+        'wet_race': 1,
+    }
+    for field, field_points in scoring_rules.items():
+        actual_value = actual_results.get(field)
+        if actual_value is not None and getattr(prediction, field) == actual_value:
+            points += field_points
+    return points
+
 @app.route("/")
 def index():
-    next_race = OpenF1API.get_next_race()
+    next_race = JolpiErgastAPI.get_next_race()
     if next_race:
-        race_date = datetime.fromisoformat(next_race['date_start'].replace('Z', '+00:00'))
-        # Ensure race_date is timezone-aware (UTC)
-        if race_date.tzinfo is None or race_date.tzinfo.utcoffset(race_date) is None:
-            race_date = race_date.replace(tzinfo=timezone.utc)
-        else:
-            race_date = race_date.astimezone(timezone.utc)
-        # Set deadline to one hour before race start
-        deadline_date = race_date - timedelta(hours=1)
-        current_date = datetime.now(timezone.utc)
+        race_date = parse_api_datetime(next_race.get('date_start'))
+        if not race_date:
+            return render_template("index.html", next_race=None)
+        deadline_date = prediction_deadline(race_date)
+        current_date = utc_now()
         time_until_race = race_date - current_date
         
         # Calculate days, hours, and minutes
@@ -107,10 +195,12 @@ def logout():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    next_race = OpenF1API.get_next_race()
+    next_race = JolpiErgastAPI.get_next_race()
     if next_race:
-        race_date = datetime.fromisoformat(next_race['date_start'].replace('Z', '+00:00'))
-        deadline_date = race_date - timedelta(hours=1)
+        race_date = parse_api_datetime(next_race.get('date_start'))
+        if not race_date:
+            return render_template("dashboard.html", next_race=None, current_user_rank=get_current_user_rank())
+        deadline_date = prediction_deadline(race_date)
         
         # Get user's prediction for next race if exists
         race = Race.query.filter_by(meeting_key=next_race['meeting_key']).first()
@@ -118,7 +208,7 @@ def dashboard():
             race = Race(
                 meeting_key=next_race['meeting_key'],
                 race_name=next_race['meeting_name'],
-                race_date=race_date
+                race_date=to_utc_naive(race_date)
             )
             db.session.add(race)
             db.session.commit()
@@ -131,21 +221,19 @@ def dashboard():
         return render_template("dashboard.html",
                              next_race=race,
                              deadline_date=deadline_date,
-                             prediction=prediction)
-    return render_template("dashboard.html", next_race=None)
+                             prediction=prediction,
+                             current_user_rank=get_current_user_rank())
+    return render_template("dashboard.html", next_race=None, current_user_rank=get_current_user_rank())
 
 @app.route("/predict/<int:race_id>", methods=["GET", "POST"])
 @login_required
 def predict(race_id):
-    race = Race.query.get_or_404(race_id)
-    current_time = datetime.now(timezone.utc)
-    
-    # Ensure race date is timezone-aware
-    if race.race_date.tzinfo is None:
-        race.race_date = race.race_date.replace(tzinfo=timezone.utc)
+    race = db.get_or_404(Race, race_id)
+    current_time = utc_now()
+    deadline_date = prediction_deadline(race.race_date)
     
     # Check if race has started (1 hour before race)
-    if current_time > race.race_date - timedelta(hours=1):
+    if current_time > deadline_date:
         flash("Prediction deadline has passed. Predictions are locked from 1 hour before the race.", "danger")
         return redirect(url_for('dashboard'))
     
@@ -163,8 +251,15 @@ def predict(race_id):
     form = PredictionForm()
     
     # Get drivers from API
-    drivers = OpenF1API.get_drivers(0)  # session_key is ignored now
-    driver_choices = [(d['permanentNumber'], f"{d['givenName']} {d['familyName']}") for d in drivers]
+    drivers = JolpiErgastAPI.get_drivers(0)  # session_key is ignored now
+    driver_choices = [
+        (d['permanentNumber'], f"{d.get('givenName', '')} {d.get('familyName', '')}".strip())
+        for d in drivers
+        if d.get('permanentNumber')
+    ]
+    if not driver_choices:
+        flash("Driver data is currently unavailable. Please try again later.", "danger")
+        return redirect(url_for('dashboard'))
     form.p1.choices = driver_choices
     form.p2.choices = driver_choices
     form.p3.choices = driver_choices
@@ -173,8 +268,15 @@ def predict(race_id):
     form.fastest_lap.choices = driver_choices
     
     # Get teams from API
-    teams = OpenF1API.get_team_points(0)  # session_key is ignored now
-    team_choices = [(t['Constructor']['constructorId'], t['Constructor']['name']) for t in teams]
+    teams = JolpiErgastAPI.get_team_points(0)  # session_key is ignored now
+    team_choices = [
+        (constructor['constructorId'], constructor.get('name', constructor['constructorId']))
+        for constructor in ((team.get('Constructor') or {}) for team in teams)
+        if constructor.get('constructorId')
+    ]
+    if not team_choices:
+        flash("Team data is currently unavailable. Please try again later.", "danger")
+        return redirect(url_for('dashboard'))
     form.team_podium.choices = team_choices
     form.team_most_points.choices = team_choices
     
@@ -230,9 +332,6 @@ def predict(race_id):
         db.session.commit()
         return redirect(url_for('dashboard'))
     
-    # Calculate deadline (1 hour before race)
-    deadline_date = race.race_date - timedelta(hours=1)
-    
     return render_template("predict.html", form=form, race=race, deadline_date=deadline_date, prediction=prediction)
 
 @app.route("/standings")
@@ -246,17 +345,21 @@ def user_standings():
 @admin_required
 def admin():
     users = User.query.all()
-    roles = Role.query.all()
-    form = AdminUserForm()
-    return render_template("admin.html", users=users, roles=roles, form=form)
+    races = Race.query.order_by(Race.race_date.desc()).all()
+    predictions = Prediction.query.all()
+    return render_template(
+        "admin.html",
+        users=users,
+        races=races,
+        predictions=predictions,
+    )
 
 @app.route("/admin/user/<int:user_id>", methods=["GET", "POST"])
 @login_required
 @admin_required
 def edit_user(user_id):
-    user = User.query.get_or_404(user_id)
-    form = AdminUserForm()
-    form.role.choices = [(r.id, r.name) for r in Role.query.all()]
+    user = db.get_or_404(User, user_id)
+    form = build_admin_form()
     
     if form.validate_on_submit():
         user.username = form.username.data
@@ -271,35 +374,10 @@ def edit_user(user_id):
     form.role.data = user.role_id
     return render_template("edit_user.html", form=form, user=user)
 
-@app.route("/admin/evaluate/<int:race_id>")
-@login_required
-@admin_required
-def evaluate_predictions(race_id):
-    race = Race.query.get_or_404(race_id)
-    if not race.is_completed:
-        flash("Race is not completed yet", "danger")
-        return redirect(url_for('admin'))
-    
-    predictions = Prediction.query.filter_by(race_id=race.id).all()
-    results = OpenF1API.get_race_results(0)
-    
-    for prediction in predictions:
-        points = 0
-        # Evaluate predictions and calculate points
-        # (Implementation depends on your scoring system)
-        
-        prediction.points_earned = points
-        user = User.query.get(prediction.user_id)
-        user.points += points
-    
-    db.session.commit()
-    flash("Predictions evaluated successfully", "success")
-    return redirect(url_for('admin'))
-
 @app.route("/prediction/<int:prediction_id>")
 @login_required
 def view_prediction(prediction_id):
-    prediction = Prediction.query.get_or_404(prediction_id)
+    prediction = db.get_or_404(Prediction, prediction_id)
     
     # Ensure user can only view their own predictions
     if prediction.user_id != current_user.id:
@@ -307,8 +385,12 @@ def view_prediction(prediction_id):
         return redirect(url_for('dashboard'))
     
     # Get driver names for better readability
-    drivers = OpenF1API.get_drivers(0)
-    driver_map = {d['permanentNumber']: f"{d['givenName']} {d['familyName']}" for d in drivers}
+    drivers = JolpiErgastAPI.get_drivers(0)
+    driver_map = {
+        d['permanentNumber']: f"{d.get('givenName', '')} {d.get('familyName', '')}".strip()
+        for d in drivers
+        if d.get('permanentNumber')
+    }
     
     return render_template("prediction_details.html", 
                          prediction=prediction, 
@@ -320,99 +402,38 @@ def view_prediction(prediction_id):
 @admin_required
 def admin_races():
     races = Race.query.order_by(Race.race_date.desc()).all()
-    now = datetime.now(timezone.utc)
-    
-    # Ensure all race dates are timezone-aware
-    for race in races:
-        if race.race_date.tzinfo is None:
-            race.race_date = race.race_date.replace(tzinfo=timezone.utc)
-    
-    print(f"Admin races route called. Found {len(races)} races:")
-    for race in races:
-        print(f"- {race.race_name} ({race.race_date})")
-    return render_template('admin/races.html', races=races, now=now)
+    race_statuses = {race.id: get_race_status(race) for race in races}
+    return render_template('admin/races.html', races=races, race_statuses=race_statuses)
 
 @app.route('/admin/race/<int:race_id>/evaluate', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def evaluate_race(race_id):
-    race = Race.query.get_or_404(race_id)
-    form = AdminUserForm()  # Create a form instance for CSRF protection
+    race = db.get_or_404(Race, race_id)
+    form = FlaskForm()
     
     if request.method == 'POST':
         # Get race results from API
-        current_year = datetime.now().year
-        race_results = OpenF1API.get_race_results(current_year, race.meeting_key)
+        current_year = utc_now().year
+        race_results = JolpiErgastAPI.get_race_results(current_year, race.meeting_key)
         
         if not race_results:
             flash('Could not fetch race results from API', 'danger')
             return redirect(url_for('admin_races'))
         
-        # Extract actual results from API data
-        results = race_results['Results']
-        actual_results = {
-            'p1': results[0]['Driver']['permanentNumber'],
-            'p2': results[1]['Driver']['permanentNumber'],
-            'p3': results[2]['Driver']['permanentNumber'],
-            'last_place': results[-1]['Driver']['permanentNumber'],
-            'dnf': next((r['Driver']['permanentNumber'] for r in results if r['status'] != 'Finished'), None),
-            'fastest_lap': next((r['Driver']['permanentNumber'] for r in results if r.get('FastestLap', {}).get('rank') == '1'), None),
-            'team_podium': results[0]['Constructor']['constructorId'],
-            'team_most_points': max(
-                (team for team in results),
-                key=lambda x: int(x['points'])
-            )['Constructor']['constructorId'],
-            'safety_car': 'yes' if any(r.get('status') == 'Safety Car' for r in results) else 'no',
-            'red_flag': 'yes' if any(r.get('status') == 'Red Flag' for r in results) else 'no',
-            'wet_race': 'yes' if any(r.get('status') == 'Wet Race' for r in results) else 'no'
-        }
+        actual_results = build_actual_results(race_results)
+        if not actual_results:
+            flash('Race results from the API were incomplete and could not be evaluated.', 'danger')
+            return redirect(url_for('admin_races'))
         
         # Get all predictions for this race
         predictions = Prediction.query.filter_by(race_id=race_id).all()
         
         for prediction in predictions:
-            points = 0
-            
-            # Check podium positions (3 points each)
-            if prediction.p1 == actual_results['p1']:
-                points += 3
-            if prediction.p2 == actual_results['p2']:
-                points += 3
-            if prediction.p3 == actual_results['p3']:
-                points += 3
-                
-            # Check last place (2 points)
-            if prediction.last_place == actual_results['last_place']:
-                points += 2
-                
-            # Check DNF (2 points)
-            if prediction.dnf == actual_results['dnf']:
-                points += 2
-                
-            # Check fastest lap (2 points)
-            if prediction.fastest_lap == actual_results['fastest_lap']:
-                points += 2
-                
-            # Check team predictions (2 points each)
-            if prediction.team_podium == actual_results['team_podium']:
-                points += 2
-            if prediction.team_most_points == actual_results['team_most_points']:
-                points += 2
-                
-            # Check race conditions (1 point each)
-            if prediction.safety_car == actual_results['safety_car']:
-                points += 1
-            if prediction.red_flag == actual_results['red_flag']:
-                points += 1
-            if prediction.wet_race == actual_results['wet_race']:
-                points += 1
-            
-            # Update prediction points
+            points = score_prediction(prediction, actual_results)
+            previous_points = prediction.points_earned or 0
             prediction.points_earned = points
-            
-            # Update user's total points
-            user = prediction.user
-            user.points += points
+            prediction.user.points = (prediction.user.points or 0) + points - previous_points
         
         # Mark race as completed
         race.is_completed = True

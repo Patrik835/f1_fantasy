@@ -1,7 +1,8 @@
 from flask_app import db
-from datetime import datetime, timezone
+from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
+from flask_app.time_utils import to_utc_aware, to_utc_naive, utc_now
 
 class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -13,7 +14,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
-    date_created = db.Column(db.DateTime, default=datetime.utcnow)
+    date_created = db.Column(db.DateTime, default=lambda: to_utc_naive(utc_now()))
     points = db.Column(db.Integer, default=0)
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'), nullable=False)
     role = db.relationship('Role', back_populates='users')
@@ -54,7 +55,7 @@ class Prediction(db.Model):
     red_flag = db.Column(db.String(3), nullable=False)    # 'yes' or 'no'
     wet_race = db.Column(db.String(3), nullable=False)    # 'yes' or 'no'
     points_earned = db.Column(db.Integer, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: to_utc_naive(utc_now()))
     user = db.relationship('User', back_populates='predictions')
     race = db.relationship('Race', back_populates='predictions')
 
@@ -80,7 +81,7 @@ class RaceSchedule(db.Model):
     sprint_time = db.Column(db.String(8), nullable=True)
     sprint_qualifying_date = db.Column(db.DateTime, nullable=True)
     sprint_qualifying_time = db.Column(db.String(8), nullable=True)
-    last_updated = db.Column(db.DateTime, default=datetime.utcnow)
+    last_updated = db.Column(db.DateTime, default=lambda: to_utc_naive(utc_now()))
 
     def __repr__(self):
         return f"<RaceSchedule {self.year} Round {self.round}: {self.race_name}>"
@@ -89,15 +90,16 @@ class RaceSchedule(db.Model):
     def race_datetime(self):
         """Combine date and time into a single datetime object"""
         if self.date and self.time:
-            return datetime.combine(self.date.date(), datetime.strptime(self.time, "%H:%M:%S").time())
+            race_datetime = datetime.combine(self.date.date(), datetime.strptime(self.time, "%H:%M:%S").time())
+            return to_utc_aware(race_datetime)
         return None
 
     @property
     def is_upcoming(self):
         """Check if the race is in the future"""
-        return self.race_datetime and self.race_datetime > datetime.now(timezone.utc)
+        return self.race_datetime and self.race_datetime > utc_now()
 
     @property
     def is_completed(self):
         """Check if the race has been completed"""
-        return self.race_datetime and self.race_datetime < datetime.now(timezone.utc)
+        return self.race_datetime and self.race_datetime < utc_now()

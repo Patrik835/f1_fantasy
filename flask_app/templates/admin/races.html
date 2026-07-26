@@ -20,20 +20,21 @@
                     <td>{{ race.race_name }}</td>
                     <td>{{ race.race_date.strftime('%Y-%m-%d %H:%M') }}</td>
                     <td>
-                        {% if race.is_completed %}
+                        {% set status = race_statuses[race.id] %}
+                        {% if status == 'Completed' %}
                             <span class="badge bg-success">Completed</span>
-                        {% elif race.race_date < now %}
+                        {% elif status == 'Finished' %}
                             <span class="badge bg-info">Finished</span>
                         {% else %}
                             <span class="badge bg-warning">Upcoming</span>
                         {% endif %}
                     </td>
                     <td>
-                        {% if race.is_completed %}
+                        {% if status == 'Completed' %}
                             <button class="btn btn-secondary btn-sm" disabled>
                                 Already Evaluated
                             </button>
-                        {% elif race.race_date < now %}
+                        {% elif status == 'Finished' %}
                             <a href="{{ url_for('evaluate_race', race_id=race.id) }}" 
                                class="btn btn-primary btn-sm">
                                 Evaluate Race

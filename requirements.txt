@@ -9,3 +9,4 @@ python-dotenv==1.0.1
 gunicorn==21.2.0
 psycopg2-binary==2.9.9  # For PostgreSQL support
 email-validator==2.1.0.post1
+pytest==8.2.0
